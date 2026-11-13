@@ -1,0 +1,24 @@
+<ContentDialog
+    x:Class="InputAccelerator.Views.EditEntryDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    DefaultButton="Primary"
+    PrimaryButtonClick="OnPrimaryButtonClick">
+
+    <StackPanel MinWidth="320" Spacing="6">
+        <TextBox
+            x:Name="ContentBox"
+            x:Uid="EntryContentBox"
+            AcceptsReturn="True"
+            MaxHeight="320"
+            MaxLength="4000"
+            MinHeight="120"
+            TextChanged="OnContentChanged"
+            TextWrapping="Wrap" />
+        <TextBlock
+            x:Name="ValidationMessage"
+            x:Uid="ValidationEmpty"
+            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+            Visibility="Collapsed" />
+    </StackPanel>
+</ContentDialog>

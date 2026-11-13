@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/InputAccelerator.Core/InputAccelerator.Core.csproj" />
+    <Project Path="src/InputAccelerator/InputAccelerator.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InputAccelerator.Tests/InputAccelerator.Tests.csproj" />
+  </Folder>
+</Solution>

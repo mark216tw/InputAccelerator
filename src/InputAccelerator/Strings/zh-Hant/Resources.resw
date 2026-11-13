@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="AppName" xml:space="preserve">
+    <value>輸入加速</value>
+  </data>
+  <data name="MainHeader.Text" xml:space="preserve">
+    <value>輸入加速</value>
+  </data>
+  <data name="MainSubheader.Text" xml:space="preserve">
+    <value>管理常用文字，點一下浮動視窗中的文字即可輸入到目前游標位置。</value>
+  </data>
+  <data name="MoreButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>更多設定</value>
+  </data>
+  <data name="MoreButton.AutomationProperties.Name" xml:space="preserve">
+    <value>更多設定</value>
+  </data>
+  <data name="SettingsWindowTitle" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="SettingsHeader.Text" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="SettingsSubheader.Text" xml:space="preserve">
+    <value>調整顯示模式與浮動視窗外觀。</value>
+  </data>
+  <data name="OverlayToggle.Header" xml:space="preserve">
+    <value>啟用浮動視窗</value>
+  </data>
+  <data name="OverlayToggle.OnContent" xml:space="preserve">
+    <value>開</value>
+  </data>
+  <data name="OverlayToggle.OffContent" xml:space="preserve">
+    <value>關</value>
+  </data>
+  <data name="InputModeLabel.Text" xml:space="preserve">
+    <value>文字輸入方式</value>
+  </data>
+  <data name="InputModeCombo.AutomationProperties.Name" xml:space="preserve">
+    <value>文字輸入方式</value>
+  </data>
+  <data name="InputModeSimulated.Content" xml:space="preserve">
+    <value>模擬鍵盤輸入</value>
+  </data>
+  <data name="InputModeClipboard.Content" xml:space="preserve">
+    <value>剪貼簿貼上</value>
+  </data>
+  <data name="InputModeHint.Text" xml:space="preserve">
+    <value>模擬鍵盤輸入不會佔用剪貼簿；若目標程式收不到文字，可改用剪貼簿貼上。</value>
+  </data>
+  <data name="DisplayModeLabel.Text" xml:space="preserve">
+    <value>顯示模式</value>
+  </data>
+  <data name="DisplayModeCombo.AutomationProperties.Name" xml:space="preserve">
+    <value>顯示模式</value>
+  </data>
+  <data name="DisplayModeSystem.Content" xml:space="preserve">
+    <value>跟隨系統</value>
+  </data>
+  <data name="DisplayModeLight.Content" xml:space="preserve">
+    <value>淺色</value>
+  </data>
+  <data name="DisplayModeDark.Content" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="FloatingBackgroundLabel.Text" xml:space="preserve">
+    <value>浮動視窗背景</value>
+  </data>
+  <data name="FloatingBackgroundHint.Text" xml:space="preserve">
+    <value>選擇浮動視窗背景色；膠囊與文字會自動使用對比色。</value>
+  </data>
+  <data name="FloatingBackgroundAuto" xml:space="preserve">
+    <value>跟隨系統</value>
+  </data>
+  <data name="FloatingBackgroundGraphite" xml:space="preserve">
+    <value>石墨灰</value>
+  </data>
+  <data name="FloatingBackgroundMidnight" xml:space="preserve">
+    <value>午夜藍</value>
+  </data>
+  <data name="FloatingBackgroundTeal" xml:space="preserve">
+    <value>深青</value>
+  </data>
+  <data name="FloatingBackgroundForest" xml:space="preserve">
+    <value>森林綠</value>
+  </data>
+  <data name="FloatingBackgroundViolet" xml:space="preserve">
+    <value>紫羅蘭</value>
+  </data>
+  <data name="FloatingBackgroundRose" xml:space="preserve">
+    <value>深玫瑰</value>
+  </data>
+  <data name="FloatingBackgroundEyeCare" xml:space="preserve">
+    <value>護眼米</value>
+  </data>
+  <data name="FloatingBackgroundSky" xml:space="preserve">
+    <value>天空藍</value>
+  </data>
+  <data name="FloatingBackgroundMint" xml:space="preserve">
+    <value>薄荷綠</value>
+  </data>
+  <data name="FloatingBackgroundGray" xml:space="preserve">
+    <value>淺灰</value>
+  </data>
+  <data name="FloatingBackgroundBlush" xml:space="preserve">
+    <value>淡粉</value>
+  </data>
+  <data name="FloatingBackgroundLavender" xml:space="preserve">
+    <value>淡紫</value>
+  </data>
+  <data name="EntryListHeader.Text" xml:space="preserve">
+    <value>文字清單</value>
+  </data>
+  <data name="AddButton.Content" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="EditButton.Content" xml:space="preserve">
+    <value>編輯</value>
+  </data>
+  <data name="DeleteButton.Content" xml:space="preserve">
+    <value>刪除</value>
+  </data>
+  <data name="MoveUpButton.Content" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="MoveDownButton.Content" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="EmptyTitle.Text" xml:space="preserve">
+    <value>尚未新增文字</value>
+  </data>
+  <data name="EmptyDescription.Text" xml:space="preserve">
+    <value>點選「新增」建立第一組常用文字。</value>
+  </data>
+  <data name="ReorderHint.Text" xml:space="preserve">
+    <value>使用上移、下移按鈕調整文字順序。</value>
+  </data>
+  <data name="FooterHint.Text" xml:space="preserve">
+    <value>關閉這個視窗會縮到系統匣；浮動視窗中的文字會輸入到目前的游標位置。</value>
+  </data>
+  <data name="VersionFormat.Text" xml:space="preserve">
+    <value>版本 {0}</value>
+  </data>
+  <data name="FloatingEmpty.Text" xml:space="preserve">
+    <value>尚無文字</value>
+  </data>
+  <data name="DragHandleText" xml:space="preserve">
+    <value>拖曳移動視窗</value>
+  </data>
+  <data name="ResizeGripText" xml:space="preserve">
+    <value>拖曳調整大小</value>
+  </data>
+  <data name="FloatingCollapseButton" xml:space="preserve">
+    <value>縮小浮動視窗</value>
+  </data>
+  <data name="FloatingRestoreButton" xml:space="preserve">
+    <value>還原浮動視窗</value>
+  </data>
+
+  <data name="EditEntryDialog.AddTitle" xml:space="preserve">
+    <value>新增文字</value>
+  </data>
+  <data name="EditEntryDialog.EditTitle" xml:space="preserve">
+    <value>編輯文字</value>
+  </data>
+  <data name="EditEntryDialog.PrimaryButtonText" xml:space="preserve">
+    <value>儲存</value>
+  </data>
+  <data name="EditEntryDialog.CloseButtonText" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="EntryContentBox.PlaceholderText" xml:space="preserve">
+    <value>輸入要快速送出的文字，可包含換行</value>
+  </data>
+  <data name="ValidationEmpty.Text" xml:space="preserve">
+    <value>請輸入文字內容。</value>
+  </data>
+
+  <data name="DeleteDialog.Title" xml:space="preserve">
+    <value>刪除文字</value>
+  </data>
+  <data name="DeleteDialog.Body" xml:space="preserve">
+    <value>確定要刪除「{0}」嗎？</value>
+  </data>
+  <data name="DeleteDialog.PrimaryButtonText" xml:space="preserve">
+    <value>刪除</value>
+  </data>
+  <data name="DeleteDialog.CloseButtonText" xml:space="preserve">
+    <value>取消</value>
+  </data>
+
+  <data name="TrayTooltip" xml:space="preserve">
+    <value>輸入加速</value>
+  </data>
+  <data name="TrayShowManager" xml:space="preserve">
+    <value>顯示主視窗</value>
+  </data>
+  <data name="TrayToggleOverlay" xml:space="preserve">
+    <value>啟用浮動視窗</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>結束</value>
+  </data>
+  <data name="TrayInjectionFailedTitle" xml:space="preserve">
+    <value>無法輸入文字</value>
+  </data>
+  <data name="TrayInjectionFailedMessage" xml:space="preserve">
+    <value>找不到可輸入的視窗，或目標程式權限較高。</value>
+  </data>
+</root>

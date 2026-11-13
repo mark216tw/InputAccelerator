@@ -1,0 +1,202 @@
+<Window
+    x:Class="InputAccelerator.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:InputAccelerator.ViewModels">
+
+    <Grid
+        x:Name="RootGrid"
+        MinWidth="600"
+        MinHeight="540"
+        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid
+            MaxWidth="960"
+            Margin="16"
+            HorizontalAlignment="Stretch"
+            RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Spacing="2">
+                    <TextBlock x:Uid="MainHeader" Style="{StaticResource TitleTextBlockStyle}" />
+                    <TextBlock x:Uid="MainSubheader" Style="{StaticResource HintTextStyle}" />
+                </StackPanel>
+
+                <Button
+                    x:Uid="MoreButton"
+                    Grid.Column="1"
+                    Width="32"
+                    Height="32"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Click="OnMoreClick"
+                    Style="{StaticResource FloatingIconButtonStyle}">
+                    <FontIcon
+                        FontSize="16"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                        Glyph="&#xE712;" />
+                </Button>
+            </Grid>
+
+            <Border
+                Grid.Row="1"
+                Padding="12"
+                Style="{StaticResource CardBorderStyle}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ToggleSwitch
+                        x:Uid="OverlayToggle"
+                        VerticalAlignment="Center"
+                        IsOn="{x:Bind ViewModel.IsOverlayEnabled, Mode=TwoWay}" />
+
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock x:Uid="InputModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Uid="InputModeCombo"
+                            MinWidth="160"
+                            HorizontalAlignment="Left"
+                            SelectedIndex="{x:Bind ViewModel.InputModeIndex, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="InputModeSimulated" />
+                            <ComboBoxItem x:Uid="InputModeClipboard" />
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="2" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    x:Uid="EntryListHeader"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource SectionHeaderTextStyle}" />
+                <Button
+                    Grid.Column="1"
+                    x:Uid="AddButton"
+                    Click="OnAddClick"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </Grid>
+
+            <Border
+                Grid.Row="3"
+                MinHeight="160"
+                Padding="6"
+                Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <ListView
+                        x:Name="EntryList"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemsSource="{x:Bind ViewModel.Entries.Entries, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.SelectedEntry, Mode=TwoWay}"
+                        SelectionMode="Single">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Margin" Value="0,0,0,1" />
+                                <Setter Property="MinHeight" Value="0" />
+                                <Setter Property="Padding" Value="8,5" />
+                                <Setter Property="CornerRadius" Value="6" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TextEntryViewModel">
+                                <TextBlock
+                                    MaxLines="3"
+                                    Text="{x:Bind Content, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="Wrap"
+                                    ToolTipService.ToolTip="{x:Bind Content, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <StackPanel
+                        x:Name="EmptyStatePanel"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsHitTestVisible="False"
+                        Spacing="4">
+                        <TextBlock
+                            x:Uid="EmptyTitle"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            x:Uid="EmptyDescription"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="4" ColumnSpacing="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button
+                    x:Uid="EditButton"
+                    Click="OnEditClick"
+                    IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
+                <Button
+                    Grid.Column="1"
+                    x:Uid="DeleteButton"
+                    Click="OnDeleteClick"
+                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                    IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
+                <Button
+                    Grid.Column="2"
+                    x:Uid="MoveUpButton"
+                    Click="OnMoveUpClick"
+                    IsEnabled="{x:Bind ViewModel.CanMoveUp, Mode=OneWay}" />
+                <Button
+                    Grid.Column="3"
+                    x:Uid="MoveDownButton"
+                    Click="OnMoveDownClick"
+                    IsEnabled="{x:Bind ViewModel.CanMoveDown, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="5"
+                    x:Uid="ReorderHint"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource HintTextStyle}" />
+            </Grid>
+
+            <Grid Grid.Row="5" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="FooterHint" Style="{StaticResource HintTextStyle}" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Bottom"
+                    Style="{StaticResource HintTextStyle}"
+                    Text="{x:Bind ViewModel.VersionText}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

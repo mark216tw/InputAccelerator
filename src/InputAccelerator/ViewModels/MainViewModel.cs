@@ -1,0 +1,212 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Globalization;
+using System.Reflection;
+using CommunityToolkit.Mvvm.ComponentModel;
+using InputAccelerator.Core.Models;
+using InputAccelerator.Helpers;
+using InputAccelerator.Services;
+using Microsoft.Extensions.Logging;
+
+namespace InputAccelerator.ViewModels;
+
+public sealed partial class MainViewModel : ObservableObject
+{
+    private readonly EntryListViewModel _entryList;
+    private readonly SettingsService _settings;
+    private readonly AppearanceService _appearance;
+    private readonly ILogger<MainViewModel> _logger;
+    private bool _isLoadingSettings;
+
+    [ObservableProperty]
+    public partial bool IsOverlayEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial int InputModeIndex { get; set; }
+
+    [ObservableProperty]
+    public partial int ThemeIndex { get; set; }
+
+    [ObservableProperty]
+    public partial FloatingBackgroundOption? SelectedBackgroundOption { get; set; }
+
+    [ObservableProperty]
+    public partial TextEntryViewModel? SelectedEntry { get; set; }
+
+    public MainViewModel(
+        EntryListViewModel entryList,
+        SettingsService settings,
+        AppearanceService appearance,
+        ILogger<MainViewModel> logger)
+    {
+        _entryList = entryList;
+        _settings = settings;
+        _appearance = appearance;
+        _logger = logger;
+        _entryList.Entries.CollectionChanged += OnEntriesCollectionChanged;
+
+        BackgroundOptions = new ObservableCollection<FloatingBackgroundOption>(FloatingBackgroundOption.CreateAll());
+
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        var versionText = version is null ? "1.0.0" : version.ToString(3);
+        var format = Strings.Get("VersionFormat.Text", "版本 {0}");
+        VersionText = string.Format(CultureInfo.CurrentCulture, format, versionText);
+    }
+
+    public event EventHandler<bool>? OverlayVisibilityChanged;
+
+    public EntryListViewModel Entries => _entryList;
+
+    public ObservableCollection<FloatingBackgroundOption> BackgroundOptions { get; }
+
+    public bool HasSelection => SelectedEntry is not null;
+
+    public bool CanMoveUp => SelectedEntry is not null && _entryList.CanMove(SelectedEntry, -1);
+
+    public bool CanMoveDown => SelectedEntry is not null && _entryList.CanMove(SelectedEntry, 1);
+
+    public string VersionText { get; }
+
+    public void LoadFromSettings(AppSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        _isLoadingSettings = true;
+        try
+        {
+            IsOverlayEnabled = settings.IsOverlayEnabled;
+            InputModeIndex = (int)settings.InputMode is 1 ? 1 : 0;
+            ThemeIndex = settings.Theme switch
+            {
+                AppTheme.Light => 1,
+                AppTheme.Dark => 2,
+                _ => 0,
+            };
+            SelectedBackgroundOption = BackgroundOptions.FirstOrDefault(
+                option => option.Index == settings.FloatingBackgroundIndex) ?? BackgroundOptions[0];
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+        }
+    }
+
+    public TextEntryViewModel AddEntry(string content)
+    {
+        var entry = _entryList.Add(content);
+        SelectedEntry = entry;
+        return entry;
+    }
+
+    public void UpdateEntry(TextEntryViewModel entry, string content)
+    {
+        _entryList.UpdateContent(entry, content);
+    }
+
+    public void RemoveEntry(TextEntryViewModel entry)
+    {
+        var removedIndex = _entryList.Entries.IndexOf(entry);
+        _entryList.Remove(entry);
+
+        if (_entryList.Entries.Count == 0)
+        {
+            SelectedEntry = null;
+        }
+        else if (removedIndex >= 0)
+        {
+            SelectedEntry = _entryList.Entries[Math.Min(removedIndex, _entryList.Entries.Count - 1)];
+        }
+    }
+
+    public void MoveSelected(int offset)
+    {
+        if (SelectedEntry is null)
+        {
+            return;
+        }
+
+        _entryList.Move(SelectedEntry, offset);
+        NotifySelectionStateChanged();
+    }
+
+    partial void OnIsOverlayEnabledChanged(bool value)
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        _settings.Current.IsOverlayEnabled = value;
+        PersistSettingsAsync();
+        OverlayVisibilityChanged?.Invoke(this, value);
+    }
+
+    partial void OnInputModeIndexChanged(int value)
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        _settings.Current.InputMode = value == 1 ? InputMode.ClipboardPaste : InputMode.SimulatedInput;
+        PersistSettingsAsync();
+    }
+
+    partial void OnThemeIndexChanged(int value)
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        var theme = value switch
+        {
+            1 => AppTheme.Light,
+            2 => AppTheme.Dark,
+            _ => AppTheme.System,
+        };
+        _settings.Current.Theme = theme;
+        _appearance.Apply(theme, _settings.Current.FloatingBackgroundIndex);
+        PersistSettingsAsync();
+    }
+
+    partial void OnSelectedBackgroundOptionChanged(FloatingBackgroundOption? value)
+    {
+        if (_isLoadingSettings || value is null)
+        {
+            return;
+        }
+
+        _settings.Current.FloatingBackgroundIndex = value.Index;
+        _appearance.Apply(_settings.Current.Theme, value.Index);
+        PersistSettingsAsync();
+    }
+
+    partial void OnSelectedEntryChanged(TextEntryViewModel? value)
+    {
+        NotifySelectionStateChanged();
+    }
+
+    private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        NotifySelectionStateChanged();
+    }
+
+    private void NotifySelectionStateChanged()
+    {
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(CanMoveUp));
+        OnPropertyChanged(nameof(CanMoveDown));
+    }
+
+    private async void PersistSettingsAsync()
+    {
+        try
+        {
+            await _settings.SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "儲存設定失敗。");
+        }
+    }
+}
