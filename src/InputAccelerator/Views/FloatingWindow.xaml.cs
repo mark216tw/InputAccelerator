@@ -16,7 +16,7 @@ namespace InputAccelerator.Views;
 
 public sealed partial class FloatingWindow : Window
 {
-    private const int CollapsedSizeDip = 56;
+    private const int CollapsedSizeDip = 44;
 
     private static readonly TimeSpan TopmostReassertInterval = TimeSpan.FromSeconds(2);
 

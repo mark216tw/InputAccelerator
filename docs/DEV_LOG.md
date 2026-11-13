@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-11-13 - v1.3.7
+
+### 目標
+縮小浮動視窗收合後的小區塊，減少桌面佔用。
+
+### 變更
+- `FloatingWindow.xaml.cs`：`CollapsedSizeDip` 由 56 改為 44。
+- `FloatingWindow.xaml`：收合圖示 `FontSize` 由 18 改為 15。
+- `MainViewModel`：主畫面版號改讀 `AssemblyInformationalVersionAttribute`，讓版號跟隨 `Directory.Build.props` 的 `Version`。
+- 版本提升至 1.3.7，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`。
+
+### 問題與解法
+- Win32 最小追蹤尺寸（收合 40 DIP）仍小於 44，無需調整。
+- 主畫面版號原本讀 `AssemblyVersion`（固定 1.3.0.0），因此都顯示 1.3.0；改讀 `AssemblyInformationalVersion`（對應 `Version` 1.3.7）並去掉 `+` 後的建置中繼資料。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
 ## 2026-11-13 - v1.3.6
 
 ### 目標

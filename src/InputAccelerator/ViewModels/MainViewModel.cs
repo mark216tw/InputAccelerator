@@ -50,8 +50,13 @@ public sealed partial class MainViewModel : ObservableObject
 
         BackgroundOptions = new ObservableCollection<FloatingBackgroundOption>(FloatingBackgroundOption.CreateAll());
 
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        var versionText = version is null ? "1.0.0" : version.ToString(3);
+        var assembly = Assembly.GetExecutingAssembly();
+        var informational = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+        var versionText = string.IsNullOrWhiteSpace(informational)
+            ? assembly.GetName().Version?.ToString(3) ?? "1.0.0"
+            : informational.Split('+')[0];
         var format = Strings.Get("VersionFormat.Text", "版本 {0}");
         VersionText = string.Format(CultureInfo.CurrentCulture, format, versionText);
     }

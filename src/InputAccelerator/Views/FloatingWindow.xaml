@@ -120,7 +120,7 @@
                     Visibility="Collapsed">
                     <TextBlock
                         x:Name="CollapsedIcon"
-                        FontSize="18"
+                        FontSize="15"
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                         Text="字" />
