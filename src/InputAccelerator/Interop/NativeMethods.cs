@@ -6,6 +6,8 @@ internal static class NativeMethods
 {
     public const int GwlExStyle = -20;
 
+    public const long WsExTopmost = 0x00000008L;
+
     public const long WsExToolWindow = 0x00000080L;
 
     public const long WsExAppWindow = 0x00040000L;
@@ -17,6 +19,8 @@ internal static class NativeMethods
     public const uint WmMouseActivate = 0x0021;
 
     public const uint WmGetMinMaxInfo = 0x0024;
+
+    public const uint WmWindowPosChanging = 0x0046;
 
     public const uint WmNcCalcSize = 0x0083;
 
@@ -173,6 +177,18 @@ internal static class NativeMethods
         public Point MaxPosition;
         public Point MinTrackSize;
         public Point MaxTrackSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WindowPos
+    {
+        public IntPtr Hwnd;
+        public IntPtr HwndInsertAfter;
+        public int X;
+        public int Y;
+        public int Cx;
+        public int Cy;
+        public uint Flags;
     }
 
     [StructLayout(LayoutKind.Sequential)]

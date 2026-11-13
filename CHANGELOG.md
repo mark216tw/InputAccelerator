@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.6] - 2026-11-13
+
+### Fixed
+
+- 修正浮動視窗有時被一般視窗蓋住、無法操作的問題。
+- 浮動視窗改以 Win32 topmost 樣式硬釘最上層，並定期與點擊時補強，避免被其他置頂視窗壓過。
+
+### Changed
+
+- 發佈時排除未使用的 Windows ML 原生元件（`onnxruntime.dll`、`DirectML.dll`、`Microsoft.Windows.AI.MachineLearning.dll`），縮小 zip 體積。
+- 版本提升至 1.3.6。
+
 ## [1.3.5] - 2026-11-13
 
 ### Changed

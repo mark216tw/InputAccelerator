@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-11-13 - v1.3.6
+
+### 目標
+修正浮動視窗有時被一般視窗蓋住、導致無法操作的問題；確保浮動視窗即使面對其他置頂視窗也能維持最上層，並縮小發佈 zip 體積。
+
+### 變更
+- `NativeMethods`：新增 `WS_EX_TOPMOST`、`WM_WINDOWPOSCHANGING` 常數與 `WINDOWPOS` 結構。
+- `FloatingWindowInterop`：視窗建立時加入 `WS_EX_TOPMOST` 並立即呼叫 `SetWindowPos(HWND_TOPMOST)`；新增 `EnsureTopmost()`；攔截 `WM_WINDOWPOSCHANGING`，把非 topmost 的 z-order 變更強制改為 `HWND_TOPMOST`。
+- `FloatingWindow`：顯示、點擊、收合／還原時補強置頂；新增 2 秒 `DispatcherQueueTimer` 於可見期間定期補強；關閉時停止並釋放。
+- `InputAccelerator.csproj`：`dotnet publish` 時排除未使用的 Windows ML 原生元件（`onnxruntime.dll`、`DirectML.dll`、`Microsoft.Windows.AI.MachineLearning.dll`），縮小 zip 體積。
+- 版本提升至 1.3.6，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`ARCHITECTURE.md`、`USER_GUIDE.md`、`BUILD_AND_RELEASE.md`。
+
+### 問題與解法
+- 根因：原本只在顯示時設定一次 `IsAlwaysOnTop`／`HWND_TOPMOST`，WinUI 在隱藏／顯示或切換視窗狀態時可能重設 topmost；又因 `WS_EX_NOACTIVATE`，點擊無法把視窗抬回前景，因此一旦被一般視窗蓋住就無法操作。
+- 解法：以 `WS_EX_TOPMOST` 與 `WM_WINDOWPOSCHANGING` 在 Win32 層硬釘住，再用定期計時器與點擊事件補強，處理其他置頂視窗造成的排序變化。
+
+### 待辦／已知限制
+- UAC 安全桌面與獨佔全螢幕程式仍可能暫時蓋住浮動視窗，程式無法突破。
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
 ## 2026-11-13 - v1.3.5
 
 ### 目標

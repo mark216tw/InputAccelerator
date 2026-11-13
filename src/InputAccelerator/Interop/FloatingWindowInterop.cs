@@ -25,6 +25,23 @@ internal sealed class FloatingWindowInterop : IDisposable
         _isCollapsed = isCollapsed;
     }
 
+    public void EnsureTopmost()
+    {
+        if (_windowHandle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        NativeMethods.SetWindowPos(
+            _windowHandle,
+            NativeMethods.HwndTopmost,
+            0,
+            0,
+            0,
+            0,
+            NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpNoActivate);
+    }
+
     public void Setup(IntPtr windowHandle)
     {
         if (windowHandle == IntPtr.Zero)
@@ -35,9 +52,11 @@ internal sealed class FloatingWindowInterop : IDisposable
         _windowHandle = windowHandle;
 
         var extendedStyle = NativeMethods.GetWindowLongPtr(windowHandle, NativeMethods.GwlExStyle).ToInt64();
-        extendedStyle |= NativeMethods.WsExToolWindow | NativeMethods.WsExNoActivate;
+        extendedStyle |= NativeMethods.WsExTopmost | NativeMethods.WsExToolWindow | NativeMethods.WsExNoActivate;
         extendedStyle &= ~NativeMethods.WsExAppWindow;
         NativeMethods.SetWindowLongPtr(windowHandle, NativeMethods.GwlExStyle, new IntPtr(extendedStyle));
+
+        EnsureTopmost();
 
         var cornerPreference = NativeMethods.DwmwcpRound;
         NativeMethods.DwmSetWindowAttribute(
@@ -63,6 +82,9 @@ internal sealed class FloatingWindowInterop : IDisposable
     {
         switch (message)
         {
+            case NativeMethods.WmWindowPosChanging:
+                KeepTopmost(lParam);
+                break;
             case NativeMethods.WmNcCalcSize:
                 if (wParam != IntPtr.Zero)
                 {
@@ -78,6 +100,24 @@ internal sealed class FloatingWindowInterop : IDisposable
         }
 
         return NativeMethods.DefSubclassProc(hWnd, message, wParam, lParam);
+    }
+
+    private static void KeepTopmost(IntPtr lParam)
+    {
+        if (lParam == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var position = Marshal.PtrToStructure<NativeMethods.WindowPos>(lParam);
+        if ((position.Flags & NativeMethods.SwpNoZOrder) != 0 ||
+            position.HwndInsertAfter == NativeMethods.HwndTopmost)
+        {
+            return;
+        }
+
+        position.HwndInsertAfter = NativeMethods.HwndTopmost;
+        Marshal.StructureToPtr(position, lParam, fDeleteOld: false);
     }
 
     private void ApplyMinimumTrackSize(IntPtr lParam)

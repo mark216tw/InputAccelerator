@@ -39,4 +39,12 @@
   <ItemGroup>
     <ProjectReference Include="..\InputAccelerator.Core\InputAccelerator.Core.csproj" />
   </ItemGroup>
+
+  <Target Name="RemoveWindowsMlNativeAssetsFromPublish" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish
+        Remove="@(ResolvedFileToPublish)"
+        Condition="'%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'onnxruntime.dll' or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'DirectML.dll' or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Microsoft.Windows.AI.MachineLearning.dll'" />
+    </ItemGroup>
+  </Target>
 </Project>

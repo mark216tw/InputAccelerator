@@ -188,6 +188,8 @@ InputAccelerator.slnx
   - DWM 圓角屬性（Windows 11）。
 - 因 `WS_EX_NOACTIVATE` 會讓 `HTCAPTION` 系統拖曳失效，改由 XAML pointer 事件搭配 `GetCursorPos` 與 `SetWindowPos` 手動移動／調整大小。
 - 收合時以 `AppWindow.MoveAndResize` 縮成 56 DIP 區塊，並暫停調整大小。
+- 置頂採三層防護：`WS_EX_TOPMOST` 樣式、攔截 `WM_WINDOWPOSCHANGING` 強制 `HWND_TOPMOST`，以及可見期間每 2 秒與點擊時呼叫 `EnsureTopmost()`；避免 WinUI 重設視窗狀態或其他置頂視窗造成遮蓋。
+- 已知限制：UAC 安全桌面與獨佔全螢幕程式仍可能暫時蓋住浮動視窗。
 
 ### 5.3 視窗位置記憶
 

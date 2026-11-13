@@ -55,7 +55,7 @@ UI、Win32 interop、系統匣與輸入注入仍需手動驗收，清單見 [系
 版本集中於 `Directory.Build.props`：
 
 ```xml
-<Version>1.3.5</Version>
+<Version>1.3.6</Version>
 <AssemblyVersion>1.3.0.0</AssemblyVersion>
 <FileVersion>1.3.0.0</FileVersion>
 ```
@@ -108,13 +108,15 @@ Assets/AppIcon.ico
 ```
 
 > framework-dependent 版本不包含 .NET Runtime 與 Windows App SDK Runtime。使用者需自行安裝對應架構的 **Windows App SDK 2.6.5 Runtime**。
+>
+> `InputAccelerator.csproj` 會在 `dotnet publish` 時排除未使用的 Windows ML 原生元件（`onnxruntime.dll`、`DirectML.dll`、`Microsoft.Windows.AI.MachineLearning.dll`），這些元件由系統的 Windows App SDK Runtime 提供。
 
 ## 6. 打包 zip
 
 建議讓 zip 解壓縮後包含單一資料夾，避免檔案散落。
 
 ```powershell
-$version = "1.3.0"
+$version = "1.3.6"
 
 New-Item -ItemType Directory -Force -Path "artifacts/stage/win-x64" | Out-Null
 New-Item -ItemType Directory -Force -Path "artifacts/stage/win-arm64" | Out-Null
@@ -141,8 +143,8 @@ Compress-Archive `
 輸出：
 
 ```text
-artifacts/InputAccelerator-1.3.0-win-x64.zip
-artifacts/InputAccelerator-1.3.0-win-arm64.zip
+artifacts/InputAccelerator-1.3.6-win-x64.zip
+artifacts/InputAccelerator-1.3.6-win-arm64.zip
 ```
 
 `artifacts/` 與 `publish/` 已在 `.gitignore` 中排除，不會進入版本控制。
@@ -166,10 +168,10 @@ git log --oneline -5
 ### 7.2 建立 Release
 
 ```powershell
-gh release create v1.3.0 `
-  "artifacts/InputAccelerator-1.3.0-win-x64.zip" `
-  "artifacts/InputAccelerator-1.3.0-win-arm64.zip" `
-  --title "快速輸入 1.3.5" `
+gh release create v1.3.6 `
+  "artifacts/InputAccelerator-1.3.6-win-x64.zip" `
+  "artifacts/InputAccelerator-1.3.6-win-arm64.zip" `
+  --title "快速輸入 1.3.6" `
   --notes-file RELEASE_NOTES.md
 ```
 
