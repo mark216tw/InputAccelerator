@@ -22,6 +22,9 @@ public sealed partial class MainViewModel : ObservableObject
     public partial bool IsOverlayEnabled { get; set; }
 
     [ObservableProperty]
+    public partial bool AutoEnterAfterSelection { get; set; }
+
+    [ObservableProperty]
     public partial int InputModeIndex { get; set; }
 
     [ObservableProperty]
@@ -74,6 +77,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             IsOverlayEnabled = settings.IsOverlayEnabled;
+            AutoEnterAfterSelection = settings.AutoEnterAfterSelection;
             InputModeIndex = (int)settings.InputMode is 1 ? 1 : 0;
             ThemeIndex = settings.Theme switch
             {
@@ -138,6 +142,17 @@ public sealed partial class MainViewModel : ObservableObject
         _settings.Current.IsOverlayEnabled = value;
         PersistSettingsAsync();
         OverlayVisibilityChanged?.Invoke(this, value);
+    }
+
+    partial void OnAutoEnterAfterSelectionChanged(bool value)
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        _settings.Current.AutoEnterAfterSelection = value;
+        PersistSettingsAsync();
     }
 
     partial void OnInputModeIndexChanged(int value)

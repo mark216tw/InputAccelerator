@@ -36,6 +36,15 @@ public sealed class TextInputComposerTests
     }
 
     [Fact]
+    public void Compose_ConvertsEscapedNewlineToReturn()
+    {
+        var units = TextInputComposer.Compose("a\\nb");
+
+        Assert.Equal(3, units.Count);
+        Assert.Equal(new TextInputUnit(TextInputUnitKind.VirtualKey, TextInputComposer.VirtualKeyReturn), units[1]);
+    }
+
+    [Fact]
     public void Compose_ConvertsTabToTabKey()
     {
         var units = TextInputComposer.Compose("a\tb");

@@ -4,6 +4,91 @@
 
 ---
 
+## 2026-11-13 - v1.3.5
+
+### 目標
+將應用程式名稱由「輸入加速」改為「快速輸入」，並同步更新文件；準備提交並發佈此版本。
+
+### 變更
+- `Resources.resw`、`Directory.Build.props`、視窗標題與系統匣：顯示名稱改為「快速輸入」。
+- `README.md`、`ARCHITECTURE.md`、`SYSTEM_DESIGN.md`、`USER_GUIDE.md`、`BUILD_AND_RELEASE.md`：同步更新名稱。
+- 版本提升至 1.3.5，更新 `CHANGELOG.md`、`RELEASE_NOTES.md`。
+
+### 問題與解法
+- 無。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+## 2026-11-13 - v1.3.4
+
+### 目標
+將「選字後自動輸出 Enter 鍵」開關改放在「啟用浮動視窗」旁邊。
+
+### 變更
+- `MainWindow.xaml`：設定卡欄位順序改為「啟用浮動視窗、自動 Enter、文字輸入方式」。
+- 版本提升至 1.3.4，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`USER_GUIDE.md`。
+
+### 問題與解法
+- 無。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+## 2026-11-13 - v1.3.3
+
+### 目標
+讓「選字後自動輸出 Enter 鍵」開關緊鄰「文字輸入方式」右側，不再被推到視窗最右緣；文字清單項目支援連按兩下開啟編輯視窗。
+
+### 變更
+- `MainWindow.xaml`：設定卡改為 `Auto/Auto/Auto/*` 欄位，自動 Enter 開關緊接文字輸入方式；清單加入 `DoubleTapped` 事件。
+- `MainWindow.xaml.cs`：抽出 `EditSelectedEntryAsync`，編輯按鈕與雙擊共用；雙擊需命中 `ListViewItem` 才開啟對話框。
+- 版本提升至 1.3.3，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`USER_GUIDE.md`。
+
+### 問題與解法
+- 無。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+## 2026-11-13 - v1.3.2
+
+### 目標
+調整主畫面設定卡版面，將「選字後自動輸出 Enter 鍵」開關移到「文字輸入方式」右側；文字內容支援 `\n` 符號代表換行，並在新增文字欄位下方加註說明。
+
+### 變更
+- `MainWindow.xaml`：設定卡改為三欄，自動 Enter 開關移至文字輸入方式右側。
+- Core：新增 `TextEscape.Unescape`，將 `\n` 轉為換行；`TextInputComposer.Compose` 與剪貼簿貼上皆先轉換，儲存內容與清單預覽仍保留 `\n` 字面。
+- `EditEntryDialog.xaml`、`Resources.resw`：欄位下方新增「可使用「\n」代表換行。」提示。
+- 新增 `TextEscapeTests` 與 `\n` 對應 Return 的 `TextInputComposer` 測試。
+- 版本提升至 1.3.2，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`USER_GUIDE.md`。
+
+### 問題與解法
+- `C:\temp\name` 這類文字中的 `\n` 也會被視為換行，屬於目前簡化規則的已知限制。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+## 2026-11-13 - v1.3.1
+
+### 目標
+在主畫面新增「選字後自動輸出 Enter 鍵」開關，預設關閉；開啟後點擊浮動視窗文字並送出成功時，自動補送一次 Enter。
+
+### 變更
+- Core：`AppSettings` 新增 `AutoEnterAfterSelection`（預設 `false`），`SettingsService` 儲存快照同步複製。
+- `MainViewModel`：新增可雙向繫結的屬性，載入與變更時立即保存設定。
+- `FloatingBarViewModel`：送出文字時帶入自動 Enter 設定。
+- `InputInjectionService`：新增自動 Enter 參數，兩種輸入模式成功後以 `VK_RETURN` 補送 Enter；失敗時不送出。
+- `MainWindow.xaml`：設定卡新增「選字後自動輸出 Enter 鍵」開關與資源字串。
+- 新增設定持久化測試，版本提升至 1.3.1 並更新文件。
+
+### 問題與解法
+- 無。
+
+### 待辦／已知限制
+- 自動 Enter 只在文字送出成功後執行，若目標程式封鎖模擬按鍵仍可能無效。
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
 ## 2026-11-13 - v1.3.0
 
 ### 目標

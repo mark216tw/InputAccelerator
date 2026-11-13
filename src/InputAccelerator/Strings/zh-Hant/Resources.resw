@@ -60,10 +60,10 @@
   </resheader>
 
   <data name="AppName" xml:space="preserve">
-    <value>輸入加速</value>
+    <value>快速輸入</value>
   </data>
   <data name="MainHeader.Text" xml:space="preserve">
-    <value>輸入加速</value>
+    <value>快速輸入</value>
   </data>
   <data name="MainSubheader.Text" xml:space="preserve">
     <value>管理常用文字，點一下浮動視窗中的文字即可輸入到目前游標位置。</value>
@@ -90,6 +90,15 @@
     <value>開</value>
   </data>
   <data name="OverlayToggle.OffContent" xml:space="preserve">
+    <value>關</value>
+  </data>
+  <data name="AutoEnterToggle.Header" xml:space="preserve">
+    <value>選字後自動輸出 Enter 鍵</value>
+  </data>
+  <data name="AutoEnterToggle.OnContent" xml:space="preserve">
+    <value>開</value>
+  </data>
+  <data name="AutoEnterToggle.OffContent" xml:space="preserve">
     <value>關</value>
   </data>
   <data name="InputModeLabel.Text" xml:space="preserve">
@@ -231,6 +240,9 @@
   <data name="EntryContentBox.PlaceholderText" xml:space="preserve">
     <value>輸入要快速送出的文字，可包含換行</value>
   </data>
+  <data name="EntryContentHint.Text" xml:space="preserve">
+    <value>可使用「\n」代表換行。</value>
+  </data>
   <data name="ValidationEmpty.Text" xml:space="preserve">
     <value>請輸入文字內容。</value>
   </data>
@@ -249,7 +261,7 @@
   </data>
 
   <data name="TrayTooltip" xml:space="preserve">
-    <value>輸入加速</value>
+    <value>快速輸入</value>
   </data>
   <data name="TrayShowManager" xml:space="preserve">
     <value>顯示主視窗</value>

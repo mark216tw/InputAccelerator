@@ -10,6 +10,7 @@ namespace InputAccelerator.Services;
 public sealed class InputInjectionService
 {
     private const int InputChunkSize = 32;
+    private const ushort VirtualKeyReturn = 0x0D;
     private readonly ForegroundWindowTracker _tracker;
     private readonly ILogger<InputInjectionService> _logger;
     private long _lastFailureTimestamp;
@@ -22,7 +23,11 @@ public sealed class InputInjectionService
 
     public event EventHandler? InjectionFailed;
 
-    public async Task SendAsync(string text, InputMode mode, CancellationToken cancellationToken = default)
+    public async Task SendAsync(
+        string text,
+        InputMode mode,
+        bool sendEnter,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(text))
         {
@@ -62,13 +67,14 @@ public sealed class InputInjectionService
                 return;
             }
 
-            if (mode == InputMode.ClipboardPaste)
+            var sent = mode == InputMode.ClipboardPaste
+                ? await SendViaClipboardAsync(text, cancellationToken).ConfigureAwait(true)
+                : await SendViaSimulatedInputAsync(text, cancellationToken).ConfigureAwait(true);
+
+            if (sent && sendEnter)
             {
-                await SendViaClipboardAsync(text, cancellationToken).ConfigureAwait(true);
-            }
-            else
-            {
-                await SendViaSimulatedInputAsync(text, cancellationToken).ConfigureAwait(true);
+                await Task.Delay(60, cancellationToken).ConfigureAwait(true);
+                await SendEnterKeyAsync(cancellationToken).ConfigureAwait(true);
             }
         }
         catch (OperationCanceledException)
@@ -81,12 +87,12 @@ public sealed class InputInjectionService
         }
     }
 
-    private async Task SendViaSimulatedInputAsync(string text, CancellationToken cancellationToken)
+    private async Task<bool> SendViaSimulatedInputAsync(string text, CancellationToken cancellationToken)
     {
         var units = TextInputComposer.Compose(text);
         if (units.Count == 0)
         {
-            return;
+            return false;
         }
 
         await Task.Delay(35, cancellationToken).ConfigureAwait(true);
@@ -139,15 +145,18 @@ public sealed class InputInjectionService
         if (!success)
         {
             ReportFailure("模擬鍵盤輸入失敗，目標程式可能不接受此輸入方式。");
+            return false;
         }
+
+        return true;
     }
 
-    private async Task SendViaClipboardAsync(string text, CancellationToken cancellationToken)
+    private async Task<bool> SendViaClipboardAsync(string text, CancellationToken cancellationToken)
     {
         try
         {
             var package = new DataPackage();
-            package.SetText(text);
+            package.SetText(TextEscape.Unescape(text));
             Clipboard.SetContent(package);
             Clipboard.Flush();
         }
@@ -155,7 +164,7 @@ public sealed class InputInjectionService
         {
             _logger.LogWarning(ex, "無法寫入剪貼簿。");
             ReportFailure("無法寫入剪貼簿。");
-            return;
+            return false;
         }
 
         await Task.Delay(120, cancellationToken).ConfigureAwait(true);
@@ -179,6 +188,32 @@ public sealed class InputInjectionService
         if (!success)
         {
             ReportFailure("剪貼簿貼上失敗，目標程式可能不接受此輸入方式。");
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task SendEnterKeyAsync(CancellationToken cancellationToken)
+    {
+        var success = await Task.Run(
+            () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var inputs = new NativeMethods.Input[2];
+                inputs[0] = CreateVirtualKeyInput(VirtualKeyReturn, keyUp: false);
+                inputs[1] = CreateVirtualKeyInput(VirtualKeyReturn, keyUp: true);
+                var inserted = NativeMethods.SendInput(
+                    (uint)inputs.Length,
+                    inputs,
+                    Marshal.SizeOf<NativeMethods.Input>());
+                return inserted == inputs.Length;
+            },
+            cancellationToken).ConfigureAwait(true);
+
+        if (!success)
+        {
+            ReportFailure("送出 Enter 鍵失敗，目標程式可能不接受此輸入方式。");
         }
     }
 

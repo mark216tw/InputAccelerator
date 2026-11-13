@@ -223,7 +223,7 @@ public sealed class TrayIconService : IDisposable
             Id = 1,
             CallbackMessage = CallbackMessage,
             IconHandle = _iconHandle,
-            Tip = Truncate(Strings.Get("TrayTooltip", "輸入加速"), 127),
+            Tip = Truncate(Strings.Get("TrayTooltip", "快速輸入"), 127),
             Info = string.Empty,
             InfoTitle = string.Empty,
         };

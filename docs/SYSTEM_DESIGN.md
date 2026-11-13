@@ -1,6 +1,6 @@
 # 系統設計文件
 
-本文件說明「輸入加速」的設計目標、需求、關鍵設計決策、狀態流程與品質考量。技術實作細節請搭配 [系統架構與技術文件](ARCHITECTURE.md) 閱讀。
+本文件說明「快速輸入」的設計目標、需求、關鍵設計決策、狀態流程與品質考量。技術實作細節請搭配 [系統架構與技術文件](ARCHITECTURE.md) 閱讀。
 
 ## 1. 文件目的
 
@@ -64,6 +64,7 @@
 | FR-13 | 支援 x64 與 arm64 免安裝發佈 | 必須 |
 | FR-14 | 文字清單為空時顯示空狀態 | 應有 |
 | FR-15 | 輸入失敗時提示使用者 | 應有 |
+| FR-16 | 可選擇選字送出後自動補送 Enter（預設關閉） | 應有 |
 
 ## 4. 非功能需求
 
@@ -247,6 +248,7 @@ TextEntry
 
 AppSettings
   IsOverlayEnabled: bool
+  AutoEnterAfterSelection: bool
   InputMode: SimulatedInput | ClipboardPaste
   Theme: System | Light | Dark
   FloatingBackgroundIndex: int（0 = 跟隨系統，1..12 = 固定色）

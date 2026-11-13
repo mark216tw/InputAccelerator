@@ -49,7 +49,10 @@ public sealed class FloatingBarViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(item);
         try
         {
-            await _injectionService.SendAsync(item.Entry.Content, _settings.Current.InputMode);
+            await _injectionService.SendAsync(
+                item.Entry.Content,
+                _settings.Current.InputMode,
+                _settings.Current.AutoEnterAfterSelection);
         }
         catch (Exception ex)
         {

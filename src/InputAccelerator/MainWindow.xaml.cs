@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.Graphics;
 
 namespace InputAccelerator;
@@ -37,7 +39,7 @@ public sealed partial class MainWindow : Window
         ViewModel.Entries.Entries.CollectionChanged += (_, _) => UpdateEmptyState();
         UpdateEmptyState();
 
-        Title = Strings.Get("AppName", "輸入加速");
+        Title = Strings.Get("AppName", "快速輸入");
         if (File.Exists(AppPaths.IconFile))
         {
             AppWindow.SetIcon(AppPaths.IconFile);
@@ -153,6 +155,21 @@ public sealed partial class MainWindow : Window
 
     private async void OnEditClick(object sender, RoutedEventArgs e)
     {
+        await EditSelectedEntryAsync();
+    }
+
+    private async void OnEntryListDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject source || !IsInsideListItem(source))
+        {
+            return;
+        }
+
+        await EditSelectedEntryAsync();
+    }
+
+    private async Task EditSelectedEntryAsync()
+    {
         if (ViewModel.SelectedEntry is not { } selected)
         {
             return;
@@ -175,6 +192,19 @@ public sealed partial class MainWindow : Window
         {
             _logger.LogError(ex, "編輯文字失敗。");
         }
+    }
+
+    private static bool IsInsideListItem(DependencyObject source)
+    {
+        for (DependencyObject? current = source; current is not null; current = VisualTreeHelper.GetParent(current))
+        {
+            if (current is ListViewItem)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async void OnDeleteClick(object sender, RoutedEventArgs e)

@@ -55,7 +55,7 @@ UI、Win32 interop、系統匣與輸入注入仍需手動驗收，清單見 [系
 版本集中於 `Directory.Build.props`：
 
 ```xml
-<Version>1.3.0</Version>
+<Version>1.3.5</Version>
 <AssemblyVersion>1.3.0.0</AssemblyVersion>
 <FileVersion>1.3.0.0</FileVersion>
 ```
@@ -169,7 +169,7 @@ git log --oneline -5
 gh release create v1.3.0 `
   "artifacts/InputAccelerator-1.3.0-win-x64.zip" `
   "artifacts/InputAccelerator-1.3.0-win-arm64.zip" `
-  --title "輸入加速 1.3.0" `
+  --title "快速輸入 1.3.5" `
   --notes-file RELEASE_NOTES.md
 ```
 
@@ -177,7 +177,7 @@ gh release create v1.3.0 `
 
 ### 7.3 Release 內容建議
 
-- 標題：`輸入加速 <版本>`
+- 標題：`快速輸入 <版本>`
 - 說明：引用 `RELEASE_NOTES.md`
 - 附件：
   - `InputAccelerator-<版本>-win-x64.zip`

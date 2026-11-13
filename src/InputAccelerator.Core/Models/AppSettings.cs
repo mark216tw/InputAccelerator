@@ -4,6 +4,8 @@ public sealed class AppSettings
 {
     public bool IsOverlayEnabled { get; set; } = true;
 
+    public bool AutoEnterAfterSelection { get; set; }
+
     public InputMode InputMode { get; set; } = InputMode.SimulatedInput;
 
     public AppTheme Theme { get; set; } = AppTheme.System;

@@ -58,6 +58,7 @@ public sealed class SettingsService
         return new AppSettings
         {
             IsOverlayEnabled = source.IsOverlayEnabled,
+            AutoEnterAfterSelection = source.AutoEnterAfterSelection,
             InputMode = source.InputMode,
             Theme = source.Theme,
             FloatingBackgroundIndex = source.FloatingBackgroundIndex,

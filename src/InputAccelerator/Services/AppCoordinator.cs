@@ -88,7 +88,7 @@ public sealed class AppCoordinator
         }
 
         _initialized = true;
-        _logger.LogInformation("輸入加速已啟動。");
+        _logger.LogInformation("快速輸入已啟動。");
     }
 
     private void OnOverlayVisibilityChanged(object? sender, bool isVisible)

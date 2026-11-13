@@ -21,6 +21,8 @@ public static class TextInputComposer
             return Array.Empty<TextInputUnit>();
         }
 
+        text = TextEscape.Unescape(text);
+
         var units = new List<TextInputUnit>(text.Length);
         for (var index = 0; index < text.Length; index++)
         {

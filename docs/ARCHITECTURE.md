@@ -1,6 +1,6 @@
 # 系統架構與技術文件
 
-本文件描述「輸入加速」（InputAccelerator）的技術架構、執行流程、關鍵模組與 Windows 平台整合方式。
+本文件描述「快速輸入」（InputAccelerator）的技術架構、執行流程、關鍵模組與 Windows 平台整合方式。
 
 ## 1. 技術基線
 
@@ -317,7 +317,8 @@ FloatingWindow.OnEntryClick
 
 - `EntryRepositoryTests`：載入、儲存、損壞檔備份、ID 正規化。
 - `SettingsStoreTests`：設定載入、列舉正規化、無效背景索引。
-- `TextInputComposerTests`：CRLF／LF、Tab、Unicode 拆分。
+- `TextInputComposerTests`：CRLF／LF、`\n` 逸出、Tab、Unicode 拆分。
+- `TextEscapeTests`：`\n` 轉換與無效逸出保留。
 - `TextPreviewTests`：預覽長度與換行處理。
 - `WindowPlacementValidatorTests`：多螢幕、越界、尺寸限制、預設位置。
 - `FloatingBackgroundPresetsTests`：索引範圍與色彩資料。

@@ -45,7 +45,7 @@ public sealed partial class FloatingWindow : Window
         UpdateEmptyState();
         _interop = new FloatingWindowInterop();
 
-        Title = Strings.Get("AppName", "輸入加速");
+        Title = Strings.Get("AppName", "快速輸入");
         if (File.Exists(AppPaths.IconFile))
         {
             AppWindow.SetIcon(AppPaths.IconFile);

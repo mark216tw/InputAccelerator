@@ -24,6 +24,7 @@ public sealed class SettingsStoreTests : IDisposable
         var settings = new AppSettings
         {
             IsOverlayEnabled = false,
+            AutoEnterAfterSelection = true,
             InputMode = InputMode.ClipboardPaste,
             Theme = AppTheme.Dark,
             FloatingBackgroundIndex = 5,
@@ -34,6 +35,7 @@ public sealed class SettingsStoreTests : IDisposable
         var loaded = await store.LoadAsync();
 
         Assert.False(loaded.IsOverlayEnabled);
+        Assert.True(loaded.AutoEnterAfterSelection);
         Assert.Equal(InputMode.ClipboardPaste, loaded.InputMode);
         Assert.Equal(AppTheme.Dark, loaded.Theme);
         Assert.Equal(5, loaded.FloatingBackgroundIndex);
@@ -51,6 +53,7 @@ public sealed class SettingsStoreTests : IDisposable
         var loaded = await store.LoadAsync();
 
         Assert.True(loaded.IsOverlayEnabled);
+        Assert.False(loaded.AutoEnterAfterSelection);
         Assert.Equal(InputMode.SimulatedInput, loaded.InputMode);
         Assert.Equal(AppTheme.System, loaded.Theme);
         Assert.Equal(FloatingBackgroundPresets.FollowSystemIndex, loaded.FloatingBackgroundIndex);
