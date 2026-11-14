@@ -2,20 +2,46 @@
     x:Class="InputAccelerator.Views.EditEntryDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:InputAccelerator.Views"
     DefaultButton="Primary"
     PrimaryButtonClick="OnPrimaryButtonClick">
 
-    <StackPanel MinWidth="320" Spacing="6">
-        <TextBox
-            x:Name="ContentBox"
-            x:Uid="EntryContentBox"
-            AcceptsReturn="True"
-            MaxHeight="320"
-            MaxLength="4000"
-            MinHeight="120"
-            TextChanged="OnContentChanged"
-            TextWrapping="Wrap" />
-        <TextBlock x:Uid="EntryContentHint" Style="{StaticResource HintTextStyle}" />
+    <StackPanel MinWidth="360" Spacing="8">
+        <StackPanel Spacing="4">
+            <TextBlock x:Uid="EntryKindLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <ComboBox
+                x:Name="KindSelector"
+                x:Uid="EntryKindCombo"
+                HorizontalAlignment="Stretch"
+                SelectionChanged="OnKindSelectionChanged">
+                <ComboBoxItem x:Uid="EntryKindTextOption" />
+                <ComboBoxItem x:Uid="EntryKindHotkeyOption" />
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel x:Name="TextPanel" Spacing="6">
+            <TextBox
+                x:Name="ContentBox"
+                x:Uid="EntryContentBox"
+                AcceptsReturn="True"
+                MaxHeight="320"
+                MaxLength="4000"
+                MinHeight="120"
+                TextChanged="OnContentChanged"
+                TextWrapping="Wrap" />
+            <TextBlock x:Uid="EntryContentHint" Style="{StaticResource HintTextStyle}" />
+        </StackPanel>
+
+        <StackPanel x:Name="HotkeyPanel" Spacing="6" Visibility="Collapsed">
+            <TextBlock x:Uid="HotkeyFieldLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <views:HotkeyRecorder x:Name="Recorder" />
+            <TextBlock x:Uid="HotkeyHint" Style="{StaticResource HintTextStyle}" />
+            <TextBox
+                x:Name="LabelBox"
+                x:Uid="EntryLabelBox"
+                MaxLength="120" />
+        </StackPanel>
+
         <TextBlock
             x:Name="ValidationMessage"
             x:Uid="ValidationEmpty"

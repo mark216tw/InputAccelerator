@@ -105,7 +105,7 @@ InputAccelerator.slnx
 7. 顯示主視窗。
 8. 若設定為啟用浮動視窗，以不啟用焦點的方式顯示。
 
-`ExitAsync` 會依序儲存浮動視窗位置、文字清單與設定，然後釋放系統匣、單一實例與位置管理器，最後關閉視窗並結束應用程式。
+`ExitAsync` 會依序儲存浮動視窗位置、項目清單與設定，然後釋放系統匣、單一實例與位置管理器，最後關閉視窗並結束應用程式。
 
 ## 4. 主要模組
 
@@ -113,20 +113,21 @@ InputAccelerator.slnx
 
 | 檔案 | 責任 |
 | --- | --- |
-| `MainWindow.xaml(.cs)` | 主視窗、文字清單、新增／編輯／刪除／排序、More 按鈕、縮到系統匣 |
+| `MainWindow.xaml(.cs)` | 主視窗、項目清單、新增／編輯／刪除／排序、More 按鈕、縮到系統匣 |
 | `FloatingWindow.xaml(.cs)` | 無邊框置頂浮動視窗、膠囊清單、拖曳、調整大小、收合／還原 |
 | `SettingsWindow.xaml(.cs)` | 顯示模式與浮動視窗背景設定，非模態 singleton 視窗 |
-| `EditEntryDialog.xaml(.cs)` | 新增／編輯文字的 `ContentDialog` |
+| `EditEntryDialog.xaml(.cs)` | 新增／編輯文字或按鍵組合的 `ContentDialog` |
+| `HotkeyRecorder.xaml(.cs)` | 按鍵組合錄製控制項，讀取修飾鍵狀態並顯示正規化組合字串 |
 
 ### 4.2 ViewModels
 
 | 檔案 | 責任 |
 | --- | --- |
-| `EntryListViewModel` | 文字清單集合、新增／更新／刪除／移動、儲存協調 |
+| `EntryListViewModel` | 項目清單集合、新增／更新／刪除／移動、儲存協調 |
 | `MainViewModel` | 主視窗設定狀態、輸入模式、主題、背景選項、版本文字 |
-| `FloatingBarViewModel` | 將文字清單轉為浮動視窗膠囊項目，套用配色，呼叫輸入服務 |
+| `FloatingBarViewModel` | 將項目清單轉為浮動視窗膠囊，依類型呼叫文字或按鍵組合輸入服務 |
 | `FloatingEntryItemViewModel` | 單一膠囊項目的顯示文字、預覽與配色 |
-| `TextEntryViewModel` | 單筆文字的可觀察包裝 |
+| `TextEntryViewModel` | 單筆文字或按鍵組合的可觀察包裝 |
 | `FloatingBackgroundOption` | 設定視窗背景色塊選項 |
 
 ### 4.3 Application Services
@@ -136,7 +137,7 @@ InputAccelerator.slnx
 | `AppCoordinator` | 應用程式生命週期與模組協調 |
 | `SettingsService` | 記憶體設定快照、序列化儲存、位置更新 |
 | `AppearanceService` | 解析顯示模式、監聽系統色彩變化、產生浮動視窗配色 |
-| `InputInjectionService` | 還原目標焦點並執行模擬輸入或剪貼簿貼上 |
+| `InputInjectionService` | 還原目標焦點並執行模擬輸入、剪貼簿貼上或按鍵組合送出 |
 | `ForegroundWindowTracker` | 以 `SetWinEventHook` 追蹤最近一個外部前景視窗 |
 | `FloatingWindowPlacementManager` | 還原、驗證、延遲儲存浮動視窗位置與大小 |
 | `TrayIconService` | 原生 `Shell_NotifyIcon` 系統匣圖示與選單 |
@@ -147,9 +148,11 @@ InputAccelerator.slnx
 
 | 服務 | 責任 |
 | --- | --- |
-| `EntryRepository` | 非同步載入／儲存文字清單，使用暫存檔原子替換，損壞檔備份 |
+| `EntryRepository` | 非同步載入／儲存項目清單，使用暫存檔原子替換，損壞檔備份 |
 | `SettingsStore` | 非同步載入／儲存設定，列舉與背景索引正規化 |
 | `TextInputComposer` | 將文字拆解為 Unicode 字元與 Enter／Tab 虛擬鍵單元 |
+| `HotkeyParser` | 解析、正規化與格式化 `Ctrl+C` 等按鍵組合，維護支援的按鍵對照表 |
+| `HotkeyInputComposer` | 將按鍵組合轉為修飾鍵、主鍵與 Extended Key 的送出序列 |
 | `TextPreview` | 產生清單與對話框使用的單行預覽文字 |
 | `WindowPlacementValidator` | 依螢幕工作區、DPI 與最小尺寸驗證視窗位置 |
 
@@ -163,12 +166,16 @@ InputAccelerator.slnx
 使用者點擊膠囊
   → ForegroundWindowTracker.ResolveInjectionTarget()
   → 若前景不是目標視窗，SetForegroundWindow 並等待 70ms
-  → 依 InputMode 選擇：
-       模擬輸入：TextInputComposer.Compose()
-                 Unicode 字元每批 32 個送出
-                 Enter／Tab 以虛擬鍵送出，之後等待 50ms
-       剪貼簿：寫入 Clipboard 並 Flush()
-               等待 120ms 後送出 Ctrl+V
+  → 依項目類型選擇：
+        文字項目：依 InputMode 選擇
+                 模擬輸入：TextInputComposer.Compose()
+                          Unicode 字元每批 32 個送出
+                          Enter／Tab 以虛擬鍵送出，之後等待 50ms
+                 剪貼簿：寫入 Clipboard 並 Flush()
+                         等待 120ms 後送出 Ctrl+V
+        按鍵組合：HotkeyParser.TryParse()
+                 HotkeyInputComposer.Compose()
+                 SendInput 依序送出修飾鍵、主鍵與 Extended Key
   → 失敗時透過事件通知系統匣氣球提示（5 秒節流）
 ```
 
@@ -229,7 +236,7 @@ InputAccelerator.slnx
 
 ## 7. 資料流
 
-### 7.1 文字清單
+### 7.1 項目清單
 
 ```text
 EditEntryDialog
@@ -255,7 +262,8 @@ SettingsWindow / 主視窗
 ```text
 FloatingWindow.OnEntryClick
   → FloatingBarViewModel.SendAsync
-  → InputInjectionService.SendAsync
+      ├─ 文字項目 → InputInjectionService.SendAsync
+      └─ 按鍵組合 → InputInjectionService.SendHotkeyAsync
   → ForegroundWindowTracker + NativeMethods.SendInput
   → 目標外部視窗
 ```
@@ -268,13 +276,22 @@ FloatingWindow.OnEntryClick
 [
   {
     "id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+    "kind": "text",
     "content": "常用文字內容"
+  },
+  {
+    "id": "9c8b7a60-1f2e-4d3c-8b7a-605142536475",
+    "kind": "hotkey",
+    "label": "複製",
+    "hotkey": "Ctrl+C"
   }
 ]
 ```
 
-- 採 camelCase、縮排輸出。
-- 載入時忽略空白內容，修正重複或空的 GUID。
+- 採 camelCase、縮排輸出；`kind` 以字串儲存，缺少時視為 `text`。
+- 使用寬鬆 JSON 編碼，中文與 `+` 等字元保持可讀。
+- 載入時忽略空白文字與無效按鍵組合，修正重複或空的 GUID。
+- 按鍵組合會轉為正規化格式（例如 `control+escape` → `Ctrl+Esc`）。
 - 儲存時先寫入 `.tmp` 再以 `File.Move(..., overwrite: true)` 原子替換。
 
 ### 8.2 `settings.json`
@@ -317,8 +334,10 @@ FloatingWindow.OnEntryClick
 
 單元測試聚焦於與 UI 無關的 Core 邏輯：
 
-- `EntryRepositoryTests`：載入、儲存、損壞檔備份、ID 正規化。
+- `EntryRepositoryTests`：載入、儲存、損壞檔備份、ID 正規化、按鍵組合與舊版資料相容。
 - `SettingsStoreTests`：設定載入、列舉正規化、無效背景索引。
+- `HotkeyParserTests`：解析、正規化、特殊鍵、無效組合。
+- `HotkeyInputComposerTests`：修飾鍵順序、反向放開、Extended Key。
 - `TextInputComposerTests`：CRLF／LF、`\n` 逸出、Tab、Unicode 拆分。
 - `TextEscapeTests`：`\n` 轉換與無效逸出保留。
 - `TextPreviewTests`：預覽長度與換行處理。
@@ -330,6 +349,7 @@ UI、Win32 interop、系統匣與輸入注入需以手動整合測試驗證，�
 ## 12. 擴充建議
 
 - 新增輸入模式：擴充 `InputMode` 與 `InputInjectionService`，並在設定介面加入選項。
+- 新增支援按鍵：在 `HotkeyParser.EnumerateKeys` 加入鍵名、虛擬鍵碼與 Extended Key 標記，並補充測試。
 - 新增背景色：在 `FloatingBackgroundPresets.All` 加入項目，並補充資源字串。
 - 新增資料欄位：修改 `AppSettings` 與 `SettingsStore.Normalize`，保持向前相容。
 - 若要改採 SQLite：可替換 Core 的 Repository 實作，UI 與 ViewModel 不需大幅修改。

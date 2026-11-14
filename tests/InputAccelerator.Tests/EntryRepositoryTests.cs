@@ -82,6 +82,109 @@ public sealed class EntryRepositoryTests : IDisposable
         Assert.Equal("新", loaded[0].Content);
     }
 
+    [Fact]
+    public async Task SaveAndLoad_RoundTripsHotkeyEntries()
+    {
+        var repository = new EntryRepository(_filePath);
+        var hotkeyId = Guid.NewGuid();
+
+        await repository.SaveAsync(
+        [
+            new TextEntry
+            {
+                Id = hotkeyId,
+                Kind = EntryKind.Hotkey,
+                Hotkey = "control+shift+c",
+                Label = "  複製  ",
+            },
+        ]);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(hotkeyId, entry.Id);
+        Assert.Equal(EntryKind.Hotkey, entry.Kind);
+        Assert.Equal("Ctrl+Shift+C", entry.Hotkey);
+        Assert.Equal("複製", entry.Label);
+        Assert.Equal(string.Empty, entry.Content);
+    }
+
+    [Fact]
+    public async Task Save_WritesKindAsCamelCaseString()
+    {
+        var repository = new EntryRepository(_filePath);
+
+        await repository.SaveAsync(
+        [
+            new TextEntry { Kind = EntryKind.Hotkey, Hotkey = "Ctrl+C", Label = "複製" },
+        ]);
+
+        var json = await File.ReadAllTextAsync(_filePath);
+        Assert.Contains("\"kind\": \"hotkey\"", json);
+        Assert.Contains("\"hotkey\": \"Ctrl+C\"", json);
+        Assert.Contains("\"label\": \"複製\"", json);
+    }
+
+    [Fact]
+    public async Task Load_LegacyEntryWithoutKind_TreatsAsText()
+    {
+        await File.WriteAllTextAsync(
+            _filePath,
+            $$"""
+            [
+              { "id": "{{Guid.NewGuid()}}", "content": "舊版文字" }
+            ]
+            """);
+        var repository = new EntryRepository(_filePath);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(EntryKind.Text, entry.Kind);
+        Assert.Equal("舊版文字", entry.Content);
+        Assert.Null(entry.Hotkey);
+    }
+
+    [Fact]
+    public async Task Load_SkipsHotkeyEntryWithInvalidChord()
+    {
+        await File.WriteAllTextAsync(
+            _filePath,
+            $$"""
+            [
+              { "id": "{{Guid.NewGuid()}}", "kind": "hotkey", "hotkey": "Ctrl+" },
+              { "id": "{{Guid.NewGuid()}}", "kind": "text", "content": "有效文字" }
+            ]
+            """);
+        var repository = new EntryRepository(_filePath);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(EntryKind.Text, entry.Kind);
+        Assert.Equal("有效文字", entry.Content);
+    }
+
+    [Fact]
+    public async Task Save_SkipsInvalidHotkeyAndSkipsTextWithoutContent()
+    {
+        var repository = new EntryRepository(_filePath);
+
+        await repository.SaveAsync(
+        [
+            new TextEntry { Kind = EntryKind.Hotkey, Hotkey = "Ctrl" },
+            new TextEntry { Kind = EntryKind.Text, Content = "   " },
+            new TextEntry { Kind = EntryKind.Hotkey, Hotkey = "Alt+F4", Label = "  關閉  " },
+        ]);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(EntryKind.Hotkey, entry.Kind);
+        Assert.Equal("Alt+F4", entry.Hotkey);
+        Assert.Equal("關閉", entry.Label);
+    }
+
     public void Dispose()
     {
         try

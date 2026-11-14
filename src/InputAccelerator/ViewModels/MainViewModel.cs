@@ -73,16 +73,16 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    public TextEntryViewModel AddEntry(string content)
+    public TextEntryViewModel AddEntry(EntryKind kind, string content, string? hotkey, string? label)
     {
-        var entry = _entryList.Add(content);
+        var entry = _entryList.Add(kind, content, hotkey, label);
         SelectedEntry = entry;
         return entry;
     }
 
-    public void UpdateEntry(TextEntryViewModel entry, string content)
+    public void UpdateEntry(TextEntryViewModel entry, EntryKind kind, string content, string? hotkey, string? label)
     {
-        _entryList.UpdateContent(entry, content);
+        _entryList.Update(entry, kind, content, hotkey, label);
     }
 
     public void RemoveEntry(TextEntryViewModel entry)

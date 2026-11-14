@@ -34,36 +34,10 @@ public sealed class InputInjectionService
             return;
         }
 
-        var target = _tracker.ResolveInjectionTarget();
-        if (target == IntPtr.Zero)
-        {
-            ReportFailure("找不到可輸入的前景視窗。");
-            return;
-        }
-
         try
         {
-            var foreground = NativeMethods.GetForegroundWindow();
-            _logger.LogDebug(
-                "準備輸入文字：目標=0x{Target:X}，前景=0x{Foreground:X}，模式={Mode}。",
-                target.ToInt64(),
-                foreground.ToInt64(),
-                mode);
-
-            if (foreground != target)
+            if (!await TryFocusTargetAsync(mode.ToString(), cancellationToken).ConfigureAwait(true))
             {
-                NativeMethods.SetForegroundWindow(target);
-                await Task.Delay(70, cancellationToken).ConfigureAwait(true);
-            }
-
-            foreground = NativeMethods.GetForegroundWindow();
-            if (foreground != target)
-            {
-                _logger.LogWarning(
-                    "無法還原焦點：目標=0x{Target:X}，前景=0x{Foreground:X}。",
-                    target.ToInt64(),
-                    foreground.ToInt64());
-                ReportFailure("無法將焦點還原到目標視窗。");
                 return;
             }
 
@@ -85,6 +59,82 @@ public sealed class InputInjectionService
             _logger.LogError(ex, "輸入文字時發生未預期的錯誤。");
             ReportFailure("輸入文字時發生錯誤。");
         }
+    }
+
+    public async Task SendHotkeyAsync(string? hotkey, CancellationToken cancellationToken = default)
+    {
+        if (!HotkeyParser.TryParse(hotkey, out var chord))
+        {
+            ReportFailure("按鍵組合無效。");
+            return;
+        }
+
+        try
+        {
+            if (!await TryFocusTargetAsync("Hotkey", cancellationToken).ConfigureAwait(true))
+            {
+                return;
+            }
+
+            await Task.Delay(35, cancellationToken).ConfigureAwait(true);
+
+            var sent = await Task.Run(
+                () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return SendChord(chord);
+                },
+                cancellationToken).ConfigureAwait(true);
+
+            if (!sent)
+            {
+                ReportFailure("送出按鍵組合失敗，目標程式可能不接受此輸入方式。");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "送出按鍵組合時發生未預期的錯誤。");
+            ReportFailure("送出按鍵組合時發生錯誤。");
+        }
+    }
+
+    private async Task<bool> TryFocusTargetAsync(string mode, CancellationToken cancellationToken)
+    {
+        var target = _tracker.ResolveInjectionTarget();
+        if (target == IntPtr.Zero)
+        {
+            ReportFailure("找不到可輸入的前景視窗。");
+            return false;
+        }
+
+        var foreground = NativeMethods.GetForegroundWindow();
+        _logger.LogDebug(
+            "準備送出輸入：目標=0x{Target:X}，前景=0x{Foreground:X}，模式={Mode}。",
+            target.ToInt64(),
+            foreground.ToInt64(),
+            mode);
+
+        if (foreground != target)
+        {
+            NativeMethods.SetForegroundWindow(target);
+            await Task.Delay(70, cancellationToken).ConfigureAwait(true);
+        }
+
+        foreground = NativeMethods.GetForegroundWindow();
+        if (foreground != target)
+        {
+            _logger.LogWarning(
+                "無法還原焦點：目標=0x{Target:X}，前景=0x{Foreground:X}。",
+                target.ToInt64(),
+                foreground.ToInt64());
+            ReportFailure("無法將焦點還原到目標視窗。");
+            return false;
+        }
+
+        return true;
     }
 
     private async Task<bool> SendViaSimulatedInputAsync(string text, CancellationToken cancellationToken)
@@ -170,19 +220,7 @@ public sealed class InputInjectionService
         await Task.Delay(120, cancellationToken).ConfigureAwait(true);
 
         var success = await Task.Run(
-            () =>
-            {
-                var inputs = new NativeMethods.Input[4];
-                inputs[0] = CreateVirtualKeyInput(0x11, keyUp: false);
-                inputs[1] = CreateVirtualKeyInput(0x56, keyUp: false);
-                inputs[2] = CreateVirtualKeyInput(0x56, keyUp: true);
-                inputs[3] = CreateVirtualKeyInput(0x11, keyUp: true);
-                var inserted = NativeMethods.SendInput(
-                    (uint)inputs.Length,
-                    inputs,
-                    Marshal.SizeOf<NativeMethods.Input>());
-                return inserted == inputs.Length;
-            },
+            () => SendChord(new HotkeyChord(HotkeyModifiers.Control, 0x56)),
             cancellationToken).ConfigureAwait(true);
 
         if (!success)
@@ -249,6 +287,45 @@ public sealed class InputInjectionService
                         VirtualKey = isUnicode ? (ushort)0 : unit.Value,
                         ScanCode = isUnicode ? unit.Value : (ushort)0,
                         Flags = (isUnicode ? NativeMethods.KeyeventfUnicode : 0) | NativeMethods.KeyeventfKeyUp,
+                    },
+                },
+            };
+        }
+
+        var inserted = NativeMethods.SendInput(
+            (uint)inputs.Length,
+            inputs,
+            Marshal.SizeOf<NativeMethods.Input>());
+        return inserted == inputs.Length;
+    }
+
+    private static bool SendChord(HotkeyChord chord)
+    {
+        var units = HotkeyInputComposer.Compose(chord);
+        if (units.Count == 0)
+        {
+            return false;
+        }
+
+        var inputs = new NativeMethods.Input[units.Count];
+        for (var index = 0; index < units.Count; index++)
+        {
+            var unit = units[index];
+            var flags = unit.IsKeyUp ? NativeMethods.KeyeventfKeyUp : 0u;
+            if (unit.IsExtended)
+            {
+                flags |= NativeMethods.KeyeventfExtendedKey;
+            }
+
+            inputs[index] = new NativeMethods.Input
+            {
+                Type = NativeMethods.InputKeyboard,
+                Data = new NativeMethods.InputUnion
+                {
+                    Keyboard = new NativeMethods.KeyboardInput
+                    {
+                        VirtualKey = unit.VirtualKey,
+                        Flags = flags,
                     },
                 },
             };

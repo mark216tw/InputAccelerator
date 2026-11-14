@@ -279,7 +279,7 @@ public sealed partial class FloatingWindow : Window
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "送出文字失敗。");
+            _logger.LogError(ex, "送出內容失敗。");
         }
         finally
         {

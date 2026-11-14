@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-11-14 - v1.4.0
+
+### 目標
+讓浮動視窗除了送出文字，也能送出 `Ctrl+C` 等單一按鍵組合，作為固定操作的快速按鈕。
+
+### 變更
+- Core：新增 `EntryKind`、`HotkeyModifiers`、`HotkeyChord`、`HotkeyParser`、`HotkeyInputComposer`。
+- `TextEntry`：新增 `Kind`、`Hotkey`、`Label`，舊資料缺少 `kind` 時視為文字項目。
+- `EntryRepository`：加入列舉字串序列化；儲存與載入時正規化按鍵組合、略過無效項目；改用寬鬆 JSON 編碼，讓中文與 `+` 保持可讀。
+- `InputInjectionService`：新增 `SendHotkeyAsync`，共用焦點還原流程；剪貼簿 Ctrl+V 改用相同送出邏輯。
+- `TextEntryViewModel`、`EntryListViewModel`、`MainViewModel`、`FloatingBarViewModel`：支援文字與按鍵組合兩種項目。
+- `EditEntryDialog`、`HotkeyRecorder`：可切換項目類型並以按鍵錄製組合鍵，支援選填名稱。
+- 主視窗清單與浮動視窗膠囊：按鍵組合項目顯示鍵盤圖示與組合鍵。
+- `NativeMethods`：新增 `KeyeventfExtendedKey` 與 `GetAsyncKeyState`。
+- 資源字串：新增項目類型、錄製與驗證文字。
+- 版本提升至 1.4.0，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`BUILD_AND_RELEASE.md`、`README.md`、`USER_GUIDE.md`、`SYSTEM_DESIGN.md`、`ARCHITECTURE.md`。
+- 發佈 x64 與 arm64 framework-dependent 版本，並建立 GitHub Release `v1.4.0`。
+
+### 問題與解法
+- 組合鍵字串若直接以 `+` 分隔，`+` 鍵本身會造成解析歧義，因此標點鍵一律使用 `Equal`、`NumpadAdd` 等名稱。
+- 錄製 Tab 時會被焦點巡覽攔截，改用 `PreviewKeyDown` 並在錄製期間標記已處理。
+- Win 鍵的按鍵事件可能被系統攔截，錄製時改以 `GetAsyncKeyState` 讀取修飾鍵狀態。
+- `SendInput` 無法送出 `Win+L`、`Ctrl+Alt+Del` 等系統保留組合鍵，於文件標示限制。
+
+### 待辦／已知限制
+- 僅支援單一組合鍵，尚未支援多步驟序列。
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+- 尚未實測不同鍵盤配置下的標點組合鍵。
+
 ## 2026-11-14 - v1.3.11
 
 ### 目標

@@ -1,3 +1,4 @@
+using InputAccelerator.Core.Models;
 using InputAccelerator.Helpers;
 using InputAccelerator.Interop;
 using InputAccelerator.Services;
@@ -135,7 +136,12 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            var dialog = new EditEntryDialog(Strings.Get("EditEntryDialog.AddTitle", "新增文字"), string.Empty)
+            var dialog = new EditEntryDialog(
+                Strings.Get("EditEntryDialog.AddTitle", "新增項目"),
+                EntryKind.Text,
+                string.Empty,
+                hotkey: null,
+                label: null)
             {
                 XamlRoot = RootGrid.XamlRoot,
                 RequestedTheme = RootGrid.ActualTheme,
@@ -143,13 +149,17 @@ public sealed partial class MainWindow : Window
 
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
-                var entry = ViewModel.AddEntry(dialog.EntryText);
+                var entry = ViewModel.AddEntry(
+                    dialog.SelectedKind,
+                    dialog.EntryText,
+                    dialog.EntryHotkey,
+                    dialog.EntryLabel);
                 EntryList.ScrollIntoView(entry);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "新增文字失敗。");
+            _logger.LogError(ex, "新增項目失敗。");
         }
     }
 
@@ -177,7 +187,12 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            var dialog = new EditEntryDialog(Strings.Get("EditEntryDialog.EditTitle", "編輯文字"), selected.Content)
+            var dialog = new EditEntryDialog(
+                Strings.Get("EditEntryDialog.EditTitle", "編輯項目"),
+                selected.Kind,
+                selected.Content,
+                selected.Hotkey,
+                selected.Label)
             {
                 XamlRoot = RootGrid.XamlRoot,
                 RequestedTheme = RootGrid.ActualTheme,
@@ -185,12 +200,17 @@ public sealed partial class MainWindow : Window
 
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
-                ViewModel.UpdateEntry(selected, dialog.EntryText);
+                ViewModel.UpdateEntry(
+                    selected,
+                    dialog.SelectedKind,
+                    dialog.EntryText,
+                    dialog.EntryHotkey,
+                    dialog.EntryLabel);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "編輯文字失敗。");
+            _logger.LogError(ex, "編輯項目失敗。");
         }
     }
 
@@ -222,7 +242,7 @@ public sealed partial class MainWindow : Window
             {
                 XamlRoot = RootGrid.XamlRoot,
                 RequestedTheme = RootGrid.ActualTheme,
-                Title = Strings.Get("DeleteDialog.Title", "刪除文字"),
+                Title = Strings.Get("DeleteDialog.Title", "刪除項目"),
                 Content = new TextBlock { Text = body, TextWrapping = TextWrapping.Wrap },
                 PrimaryButtonText = Strings.Get("DeleteDialog.PrimaryButtonText", "刪除"),
                 CloseButtonText = Strings.Get("DeleteDialog.CloseButtonText", "取消"),

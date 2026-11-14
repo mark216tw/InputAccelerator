@@ -44,22 +44,33 @@ public sealed class EntryListViewModel : ObservableObject
         OnPropertyChanged(nameof(HasEntries));
     }
 
-    public TextEntryViewModel Add(string content)
+    public TextEntryViewModel Add(EntryKind kind, string content, string? hotkey, string? label)
     {
-        var entry = new TextEntryViewModel(Guid.NewGuid(), content);
+        var entry = new TextEntryViewModel(Guid.NewGuid(), content)
+        {
+            Kind = kind,
+            Hotkey = hotkey,
+            Label = label,
+        };
         Entries.Add(entry);
         return entry;
     }
 
-    public void UpdateContent(TextEntryViewModel entry, string content)
+    public void Update(TextEntryViewModel entry, EntryKind kind, string content, string? hotkey, string? label)
     {
         ArgumentNullException.ThrowIfNull(entry);
-        if (string.Equals(entry.Content, content, StringComparison.Ordinal))
+        if (entry.Kind == kind &&
+            string.Equals(entry.Content, content, StringComparison.Ordinal) &&
+            string.Equals(entry.Hotkey, hotkey, StringComparison.Ordinal) &&
+            string.Equals(entry.Label, label, StringComparison.Ordinal))
         {
             return;
         }
 
+        entry.Kind = kind;
         entry.Content = content;
+        entry.Hotkey = hotkey;
+        entry.Label = label;
         QueuePersistence();
     }
 
@@ -127,7 +138,7 @@ public sealed class EntryListViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "儲存文字清單失敗。");
+            _logger.LogError(ex, "儲存項目清單失敗。");
         }
         finally
         {

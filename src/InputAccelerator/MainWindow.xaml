@@ -115,12 +115,25 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:TextEntryViewModel">
-                                <TextBlock
-                                    MaxLines="3"
-                                    Text="{x:Bind Content, Mode=OneWay}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="Wrap"
-                                    ToolTipService.ToolTip="{x:Bind Content, Mode=OneWay}" />
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon
+                                        VerticalAlignment="Top"
+                                        FontSize="14"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Glyph="&#xE765;"
+                                        Visibility="{x:Bind HotkeyVisibility, Mode=OneWay}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        MaxLines="3"
+                                        Text="{x:Bind DisplayText, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="Wrap"
+                                        ToolTipService.ToolTip="{x:Bind ToolTipText, Mode=OneWay}" />
+                                </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>

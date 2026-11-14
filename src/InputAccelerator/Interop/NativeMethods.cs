@@ -74,6 +74,8 @@ internal static class NativeMethods
 
     public const uint InputKeyboard = 1;
 
+    public const uint KeyeventfExtendedKey = 0x0001;
+
     public const uint KeyeventfKeyUp = 0x0002;
 
     public const uint KeyeventfUnicode = 0x0004;
@@ -308,6 +310,9 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetCursorPos(out Point lpPoint);
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int virtualKey);
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool SetForegroundWindow(IntPtr hWnd);

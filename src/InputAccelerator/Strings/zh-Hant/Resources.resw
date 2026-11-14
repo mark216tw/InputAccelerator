@@ -66,7 +66,7 @@
     <value>快速輸入</value>
   </data>
   <data name="MainSubheader.Text" xml:space="preserve">
-    <value>管理常用文字，點一下浮動視窗中的文字即可輸入到目前游標位置。</value>
+    <value>管理常用文字與按鍵組合，點一下浮動視窗中的項目即可送出到目前游標位置。</value>
   </data>
   <data name="MoreButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>更多設定</value>
@@ -150,7 +150,7 @@
     <value>浮動視窗自動縮小</value>
   </data>
   <data name="FloatingAutoCollapseHint.Text" xml:space="preserve">
-    <value>浮動視窗超過指定時間沒有滑鼠互動或送出文字時，會自動縮小成小區塊。</value>
+    <value>浮動視窗超過指定時間沒有滑鼠互動或送出項目時，會自動縮小成小區塊。</value>
   </data>
   <data name="FloatingAutoCollapseOff.Content" xml:space="preserve">
     <value>不自動縮小</value>
@@ -237,7 +237,7 @@
     <value>淡紫</value>
   </data>
   <data name="EntryListHeader.Text" xml:space="preserve">
-    <value>文字清單</value>
+    <value>項目清單</value>
   </data>
   <data name="AddButton.Content" xml:space="preserve">
     <value>新增</value>
@@ -255,22 +255,22 @@
     <value>下移</value>
   </data>
   <data name="EmptyTitle.Text" xml:space="preserve">
-    <value>尚未新增文字</value>
+    <value>尚未新增項目</value>
   </data>
   <data name="EmptyDescription.Text" xml:space="preserve">
-    <value>點選「新增」建立第一組常用文字。</value>
+    <value>點選「新增」建立第一組常用文字或按鍵組合。</value>
   </data>
   <data name="ReorderHint.Text" xml:space="preserve">
-    <value>使用上移、下移按鈕調整文字順序。</value>
+    <value>使用上移、下移按鈕調整項目順序。</value>
   </data>
   <data name="FooterHint.Text" xml:space="preserve">
-    <value>關閉這個視窗會縮到系統匣；浮動視窗中的文字會輸入到目前的游標位置。</value>
+    <value>關閉這個視窗會縮到系統匣；浮動視窗中的項目會送出到目前的游標位置。</value>
   </data>
   <data name="VersionFormat.Text" xml:space="preserve">
     <value>版本 {0}</value>
   </data>
   <data name="FloatingEmpty.Text" xml:space="preserve">
-    <value>尚無文字</value>
+    <value>尚無項目</value>
   </data>
   <data name="DragHandleText" xml:space="preserve">
     <value>拖曳移動視窗</value>
@@ -286,10 +286,10 @@
   </data>
 
   <data name="EditEntryDialog.AddTitle" xml:space="preserve">
-    <value>新增文字</value>
+    <value>新增項目</value>
   </data>
   <data name="EditEntryDialog.EditTitle" xml:space="preserve">
-    <value>編輯文字</value>
+    <value>編輯項目</value>
   </data>
   <data name="EditEntryDialog.PrimaryButtonText" xml:space="preserve">
     <value>儲存</value>
@@ -306,9 +306,42 @@
   <data name="ValidationEmpty.Text" xml:space="preserve">
     <value>請輸入文字內容。</value>
   </data>
+  <data name="ValidationHotkey.Text" xml:space="preserve">
+    <value>請按下要送出的按鍵組合。</value>
+  </data>
+  <data name="EntryKindLabel.Text" xml:space="preserve">
+    <value>項目類型</value>
+  </data>
+  <data name="EntryKindCombo.AutomationProperties.Name" xml:space="preserve">
+    <value>項目類型</value>
+  </data>
+  <data name="EntryKindTextOption.Content" xml:space="preserve">
+    <value>文字</value>
+  </data>
+  <data name="EntryKindHotkeyOption.Content" xml:space="preserve">
+    <value>按鍵組合</value>
+  </data>
+  <data name="HotkeyFieldLabel.Text" xml:space="preserve">
+    <value>按鍵組合</value>
+  </data>
+  <data name="HotkeyHint.Text" xml:space="preserve">
+    <value>點擊欄位後直接按下組合鍵；按 Esc 可取消錄製。</value>
+  </data>
+  <data name="EntryLabelBox.PlaceholderText" xml:space="preserve">
+    <value>名稱（選填）</value>
+  </data>
+  <data name="HotkeyRecorder.AutomationProperties.Name" xml:space="preserve">
+    <value>按鍵組合</value>
+  </data>
+  <data name="HotkeyRecorder.PlaceholderText" xml:space="preserve">
+    <value>點擊後按下組合鍵</value>
+  </data>
+  <data name="HotkeyRecorder.RecordingText" xml:space="preserve">
+    <value>請按下組合鍵…</value>
+  </data>
 
   <data name="DeleteDialog.Title" xml:space="preserve">
-    <value>刪除文字</value>
+    <value>刪除項目</value>
   </data>
   <data name="DeleteDialog.Body" xml:space="preserve">
     <value>確定要刪除「{0}」嗎？</value>
@@ -333,7 +366,7 @@
     <value>結束</value>
   </data>
   <data name="TrayInjectionFailedTitle" xml:space="preserve">
-    <value>無法輸入文字</value>
+    <value>無法送出內容</value>
   </data>
   <data name="TrayInjectionFailedMessage" xml:space="preserve">
     <value>找不到可輸入的視窗，或目標程式權限較高。</value>

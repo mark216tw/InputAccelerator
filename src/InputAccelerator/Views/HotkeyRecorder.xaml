@@ -1,0 +1,28 @@
+<UserControl
+    x:Class="InputAccelerator.Views.HotkeyRecorder"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Button
+        x:Name="RecorderButton"
+        Padding="10,6"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Left"
+        Click="OnRecorderClick"
+        LostFocus="OnRecorderLostFocus">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <FontIcon
+                FontSize="14"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Glyph="&#xE765;" />
+            <TextBlock
+                x:Name="HotkeyText"
+                VerticalAlignment="Center"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="PlaceholderText"
+                VerticalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+    </Button>
+</UserControl>

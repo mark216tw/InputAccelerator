@@ -1,4 +1,6 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using InputAccelerator.Core.Models;
 
 namespace InputAccelerator.Core.Services;
@@ -10,6 +12,8 @@ public sealed class EntryRepository
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
     private readonly string _filePath;
@@ -51,14 +55,7 @@ public sealed class EntryRepository
 
     public async Task SaveAsync(IEnumerable<TextEntry> entries, CancellationToken cancellationToken = default)
     {
-        var snapshot = entries
-            .Where(static entry => entry is not null && !string.IsNullOrWhiteSpace(entry.Content))
-            .Select(static entry => new TextEntry
-            {
-                Id = entry.Id == Guid.Empty ? Guid.NewGuid() : entry.Id,
-                Content = entry.Content,
-            })
-            .ToList();
+        var snapshot = Normalize(entries);
 
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -117,21 +114,58 @@ public sealed class EntryRepository
         var result = new List<TextEntry>();
         foreach (var entry in entries)
         {
-            if (entry is null || string.IsNullOrWhiteSpace(entry.Content))
+            if (entry is null)
             {
                 continue;
             }
 
-            var id = entry.Id == Guid.Empty || !usedIds.Add(entry.Id) ? Guid.NewGuid() : entry.Id;
-            usedIds.Add(id);
+            var kind = Enum.IsDefined(entry.Kind) ? entry.Kind : EntryKind.Text;
+            if (kind == EntryKind.Hotkey)
+            {
+                if (!HotkeyParser.TryParse(entry.Hotkey, out var chord))
+                {
+                    continue;
+                }
+
+                var label = NormalizeLabel(entry.Label);
+                var id = entry.Id == Guid.Empty || !usedIds.Add(entry.Id) ? Guid.NewGuid() : entry.Id;
+                usedIds.Add(id);
+                result.Add(new TextEntry
+                {
+                    Id = id,
+                    Kind = EntryKind.Hotkey,
+                    Hotkey = HotkeyParser.Format(chord),
+                    Label = label,
+                });
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(entry.Content))
+            {
+                continue;
+            }
+
+            var textId = entry.Id == Guid.Empty || !usedIds.Add(entry.Id) ? Guid.NewGuid() : entry.Id;
+            usedIds.Add(textId);
             result.Add(new TextEntry
             {
-                Id = id,
+                Id = textId,
+                Kind = EntryKind.Text,
                 Content = entry.Content,
             });
         }
 
         return result;
+    }
+
+    private static string? NormalizeLabel(string? label)
+    {
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            return null;
+        }
+
+        return label.Trim();
     }
 
     private void TryBackupCorruptFile()

@@ -49,6 +49,12 @@ public sealed class FloatingBarViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(item);
         try
         {
+            if (item.Entry.IsHotkey)
+            {
+                await _injectionService.SendHotkeyAsync(item.Entry.Hotkey);
+                return;
+            }
+
             await _injectionService.SendAsync(
                 item.Entry.Content,
                 _settings.Current.InputMode,
@@ -56,7 +62,7 @@ public sealed class FloatingBarViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "送出文字失敗。");
+            _logger.LogError(ex, "送出內容失敗。");
         }
     }
 

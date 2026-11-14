@@ -81,12 +81,25 @@
                                             BorderBrush="{x:Bind ChipBorder, Mode=OneWay}"
                                             Click="OnEntryClick"
                                             Style="{StaticResource FloatingChipButtonStyle}"
-                                            ToolTipService.ToolTip="{x:Bind Entry.Content, Mode=OneWay}">
-                                            <TextBlock
-                                                Foreground="{x:Bind ChipForeground, Mode=OneWay}"
-                                                Text="{x:Bind Preview, Mode=OneWay}"
-                                                TextTrimming="CharacterEllipsis"
-                                                TextWrapping="NoWrap" />
+                                            ToolTipService.ToolTip="{x:Bind Entry.ToolTipText, Mode=OneWay}">
+                                            <Grid ColumnSpacing="5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <FontIcon
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    Foreground="{x:Bind ChipForeground, Mode=OneWay}"
+                                                    Glyph="&#xE765;"
+                                                    Visibility="{x:Bind Entry.HotkeyVisibility, Mode=OneWay}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Foreground="{x:Bind ChipForeground, Mode=OneWay}"
+                                                    Text="{x:Bind Preview, Mode=OneWay}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="NoWrap" />
+                                            </Grid>
                                         </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
