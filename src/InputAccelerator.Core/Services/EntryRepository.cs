@@ -34,17 +34,8 @@ public sealed class EntryRepository
 
         try
         {
-            await using var stream = new FileStream(
-                _filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                bufferSize: 4096,
-                FileOptions.Asynchronous | FileOptions.SequentialScan);
-            var entries = await JsonSerializer.DeserializeAsync<List<TextEntry>>(stream, SerializerOptions, cancellationToken)
-                .ConfigureAwait(false);
-
-            return Normalize(entries);
+            var result = await ReadFileAsync(_filePath, cancellationToken).ConfigureAwait(false);
+            return result.Entries;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
@@ -53,49 +44,27 @@ public sealed class EntryRepository
         }
     }
 
+    public async Task<EntryImportResult> ImportFromFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("找不到匯入檔案。", filePath);
+        }
+
+        return await ReadFileAsync(filePath, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task SaveAsync(IEnumerable<TextEntry> entries, CancellationToken cancellationToken = default)
     {
-        var snapshot = Normalize(entries);
+        var snapshot = NormalizeEntries(entries);
 
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var directory = Path.GetDirectoryName(_filePath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var temporaryPath = _filePath + ".tmp";
-            try
-            {
-                await using (var stream = new FileStream(
-                    temporaryPath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None,
-                    bufferSize: 4096,
-                    FileOptions.Asynchronous))
-                {
-                    await JsonSerializer.SerializeAsync(stream, snapshot, SerializerOptions, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
-                File.Move(temporaryPath, _filePath, overwrite: true);
-            }
-            finally
-            {
-                if (File.Exists(temporaryPath))
-                {
-                    try
-                    {
-                        File.Delete(temporaryPath);
-                    }
-                    catch (IOException)
-                    {
-                    }
-                }
-            }
+            await WriteFileAsync(_filePath, snapshot, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -103,7 +72,88 @@ public sealed class EntryRepository
         }
     }
 
-    private static IReadOnlyList<TextEntry> Normalize(IEnumerable<TextEntry>? entries)
+    public async Task ExportToFileAsync(
+        string filePath,
+        IEnumerable<TextEntry> entries,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        var snapshot = NormalizeEntries(entries);
+
+        await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await WriteFileAsync(filePath, snapshot, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
+    }
+
+    private static async Task<EntryImportResult> ReadFileAsync(
+        string filePath,
+        CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(
+            filePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 4096,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        var source = await JsonSerializer.DeserializeAsync<List<TextEntry>>(stream, SerializerOptions, cancellationToken)
+            .ConfigureAwait(false);
+        var normalized = NormalizeEntries(source);
+        var skipped = (source?.Count ?? 0) - normalized.Count;
+
+        return new EntryImportResult(normalized, Math.Max(0, skipped));
+    }
+
+    private static async Task WriteFileAsync(
+        string filePath,
+        IReadOnlyList<TextEntry> entries,
+        CancellationToken cancellationToken)
+    {
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var temporaryPath = filePath + ".tmp";
+        try
+        {
+            await using (var stream = new FileStream(
+                temporaryPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 4096,
+                FileOptions.Asynchronous))
+            {
+                await JsonSerializer.SerializeAsync(stream, entries, SerializerOptions, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            File.Move(temporaryPath, filePath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (IOException)
+                {
+                }
+            }
+        }
+    }
+
+    public static IReadOnlyList<TextEntry> NormalizeEntries(IEnumerable<TextEntry>? entries)
     {
         if (entries is null)
         {

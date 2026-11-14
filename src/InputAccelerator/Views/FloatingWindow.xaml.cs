@@ -111,6 +111,10 @@ public sealed partial class FloatingWindow : Window
         ToolTipService.SetToolTip(CollapseButton, collapseText);
         AutomationProperties.SetName(CollapseButton, collapseText);
 
+        var openMainText = Strings.Get("FloatingOpenMainButton", "開啟主視窗");
+        ToolTipService.SetToolTip(OpenMainButton, openMainText);
+        AutomationProperties.SetName(OpenMainButton, openMainText);
+
         var restoreText = Strings.Get("FloatingRestoreButton", "還原浮動視窗");
         ToolTipService.SetToolTip(CollapsedBlock, restoreText);
         AutomationProperties.SetName(CollapsedBlock, restoreText);
@@ -121,6 +125,8 @@ public sealed partial class FloatingWindow : Window
     }
 
     public event EventHandler<bool>? CollapseStateChanged;
+
+    public event EventHandler? OpenMainWindowRequested;
 
     public FloatingBarViewModel ViewModel { get; }
 
@@ -173,6 +179,7 @@ public sealed partial class FloatingWindow : Window
         ResizeGripPath.Stroke = palette.MutedForeground;
         EmptyStateText.Foreground = palette.Foreground;
         CollapseIcon.Foreground = palette.MutedForeground;
+        OpenMainIcon.Foreground = palette.MutedForeground;
         CollapsedIcon.Foreground = palette.Foreground;
         CollapsedBlock.Background = palette.ChipBackground;
         CollapsedBlock.BorderBrush = palette.ChipBorder;
@@ -285,6 +292,11 @@ public sealed partial class FloatingWindow : Window
         {
             _isSending = false;
         }
+    }
+
+    private void OnOpenMainClick(object sender, RoutedEventArgs e)
+    {
+        OpenMainWindowRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnCollapseClick(object sender, RoutedEventArgs e)

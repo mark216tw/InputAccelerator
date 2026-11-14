@@ -209,6 +209,75 @@ public sealed class EntryRepositoryTests : IDisposable
         Assert.Equal("關閉", entry.Label);
     }
 
+    [Fact]
+    public async Task ExportAndImport_RoundTripsEntries()
+    {
+        var repository = new EntryRepository(_filePath);
+        var exportPath = Path.Combine(_directory, "export.json");
+        var textId = Guid.NewGuid();
+        var hotkeyId = Guid.NewGuid();
+
+        await repository.ExportToFileAsync(
+            exportPath,
+            [
+                new TextEntry { Id = textId, Content = "匯出文字" },
+                new TextEntry
+                {
+                    Id = hotkeyId,
+                    Kind = EntryKind.Hotkey,
+                    Hotkey = "control+shift+c",
+                    Label = "  複製  ",
+                },
+            ]);
+
+        var result = await repository.ImportFromFileAsync(exportPath);
+
+        Assert.Equal(0, result.SkippedCount);
+        Assert.Equal(2, result.Entries.Count);
+        Assert.Equal(textId, result.Entries[0].Id);
+        Assert.Equal("匯出文字", result.Entries[0].Content);
+        Assert.Equal(hotkeyId, result.Entries[1].Id);
+        Assert.Equal("Ctrl+Shift+C", result.Entries[1].Hotkey);
+        Assert.Equal("複製", result.Entries[1].Label);
+        Assert.False(File.Exists(exportPath + ".tmp"));
+    }
+
+    [Fact]
+    public async Task Import_WhenJsonIsInvalid_ThrowsAndKeepsSourceFile()
+    {
+        var repository = new EntryRepository(_filePath);
+        var importPath = Path.Combine(_directory, "import.json");
+        await File.WriteAllTextAsync(importPath, "{ not valid json");
+
+        await Assert.ThrowsAsync<System.Text.Json.JsonException>(
+            () => repository.ImportFromFileAsync(importPath));
+
+        Assert.True(File.Exists(importPath));
+        Assert.Empty(Directory.GetFiles(_directory, "import.json.bad-*"));
+    }
+
+    [Fact]
+    public async Task Import_ReportsSkippedInvalidEntries()
+    {
+        var repository = new EntryRepository(_filePath);
+        var importPath = Path.Combine(_directory, "import.json");
+        await File.WriteAllTextAsync(
+            importPath,
+            $$"""
+            [
+              { "id": "{{Guid.NewGuid()}}", "kind": "text", "content": "有效" },
+              { "id": "{{Guid.NewGuid()}}", "kind": "text", "content": "   " },
+              { "id": "{{Guid.NewGuid()}}", "kind": "hotkey", "hotkey": "Ctrl+" }
+            ]
+            """);
+
+        var result = await repository.ImportFromFileAsync(importPath);
+
+        var entry = Assert.Single(result.Entries);
+        Assert.Equal("有效", entry.Content);
+        Assert.Equal(2, result.SkippedCount);
+    }
+
     public void Dispose()
     {
         try

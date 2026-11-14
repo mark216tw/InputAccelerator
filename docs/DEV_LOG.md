@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-11-14 - v1.5.1
+
+### 目標
+讓項目清單可備份、還原與轉移，並在浮動視窗左上角提供開啟主視窗的快捷按鈕。
+
+### 變更
+- Core：`EntryRepository` 新增指定路徑的匯入／匯出與 `EntryImportResult`；新增 `EntryListMerger` 處理附加模式的 GUID 衝突。
+- `EntryListViewModel`：新增批次匯入、匯出與讀取匯入檔，匯入後只儲存一次。
+- 主視窗：項目清單上方新增「匯入」「匯出」按鈕，使用 Windows App SDK `Microsoft.Windows.Storage.Pickers`；匯入可選擇附加或取代，並顯示略過筆數。
+- 浮動視窗：左上角新增「開啟主視窗」圖示按鈕，透過事件交由 `AppCoordinator` 顯示主視窗。
+- 資源字串、README、使用指南、系統設計、架構文件與版本資訊同步更新至 1.5.1。
+- 測試：新增匯入／匯出、略過無效項目與合併 GUID 衝突測試。
+- 發佈 x64 與 arm64 framework-dependent 版本，並建立 GitHub Release `v1.5.1`。
+
+### 問題與解法
+- 未封裝 WinUI 3 若使用舊版 `Windows.Storage.Pickers` 需額外初始化視窗；改用 Windows App SDK 2.6.5 的 `Microsoft.Windows.Storage.Pickers` 並傳入 `AppWindow.Id`，可直接在桌面程式使用。
+- 匯入空檔案並選擇取代時，若沿用「僅在有項目時儲存」會讓舊清單留在磁碟；改為匯入完成後一律儲存一次。
+- 浮動視窗頂端列高度由 18 調為 22 DIP，容納左側 20×20 圖示按鈕，拖曳區其餘範圍仍可作用。
+
+### 待辦
+- 尚未在 Windows 10 1809 與 arm64 實機驗證匯入／匯出檔案選擇器。
+- 尚未實測大量項目（千筆以上）匯入時的浮動視窗重建效能。
+
 ## 2026-11-14 - v1.5.0
 
 ### 目標

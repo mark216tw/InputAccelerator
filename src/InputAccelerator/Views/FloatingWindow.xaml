@@ -19,7 +19,7 @@
             <Grid>
                 <Grid x:Name="ExpandedView">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="18" />
+                        <RowDefinition Height="22" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -41,6 +41,22 @@
                                 CornerRadius="1.5"
                                 Opacity="0.6" />
                         </Border>
+
+                        <Button
+                            x:Name="OpenMainButton"
+                            Width="20"
+                            Height="20"
+                            Margin="4,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Click="OnOpenMainClick"
+                            Style="{StaticResource FloatingIconButtonStyle}">
+                            <FontIcon
+                                x:Name="OpenMainIcon"
+                                FontSize="10"
+                                Foreground="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                                Glyph="&#xE8A7;" />
+                        </Button>
 
                         <Button
                             x:Name="CollapseButton"

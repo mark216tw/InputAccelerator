@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.Windows.Storage.Pickers;
 using Windows.Graphics;
 
 namespace InputAccelerator;
@@ -161,6 +162,151 @@ public sealed partial class MainWindow : Window
         {
             _logger.LogError(ex, "新增項目失敗。");
         }
+    }
+
+    private async void OnImportClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new FileOpenPicker(AppWindow.Id)
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                CommitButtonText = Strings.Get("ImportPickerCommitButtonText", "匯入"),
+            };
+            picker.FileTypeFilter.Add(".json");
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null || string.IsNullOrWhiteSpace(file.Path))
+            {
+                return;
+            }
+
+            var importResult = await ViewModel.Entries.ReadImportFileAsync(file.Path);
+            if (importResult.Entries.Count == 0)
+            {
+                await ShowMessageAsync(
+                    Strings.Get("ImportEmpty.Title", "沒有可匯入的項目"),
+                    Strings.Get("ImportEmpty.Body", "檔案中沒有有效的文字或按鍵組合項目。"));
+                return;
+            }
+
+            var bodyFormat = Strings.Get(
+                "ImportDialog.Body",
+                "已讀取 {0} 筆有效項目，{1} 筆無效項目會略過。\n\n要附加到現有清單，還是先清空目前清單再匯入？");
+            var body = string.Format(
+                System.Globalization.CultureInfo.CurrentCulture,
+                bodyFormat,
+                importResult.Entries.Count,
+                importResult.SkippedCount);
+            var dialog = new ContentDialog
+            {
+                XamlRoot = RootGrid.XamlRoot,
+                RequestedTheme = RootGrid.ActualTheme,
+                Title = Strings.Get("ImportDialog.Title", "匯入項目清單"),
+                Content = new TextBlock { Text = body, TextWrapping = TextWrapping.Wrap },
+                PrimaryButtonText = Strings.Get("ImportDialog.AppendButtonText", "附加到現有清單"),
+                SecondaryButtonText = Strings.Get("ImportDialog.ReplaceButtonText", "取代目前清單"),
+                CloseButtonText = Strings.Get("ImportDialog.CancelButtonText", "取消"),
+                DefaultButton = ContentDialogButton.Close,
+            };
+
+            var choice = await dialog.ShowAsync();
+            if (choice == ContentDialogResult.None)
+            {
+                return;
+            }
+
+            var mode = choice == ContentDialogResult.Primary
+                ? EntryImportMode.Append
+                : EntryImportMode.Replace;
+            var firstImportedIndex = mode == EntryImportMode.Replace
+                ? 0
+                : ViewModel.Entries.Entries.Count;
+            var importedCount = await ViewModel.Entries.ImportAsync(importResult, mode);
+
+            if (ViewModel.Entries.Entries.Count > firstImportedIndex)
+            {
+                var firstImported = ViewModel.Entries.Entries[firstImportedIndex];
+                ViewModel.SelectedEntry = firstImported;
+                EntryList.ScrollIntoView(firstImported);
+            }
+            else
+            {
+                ViewModel.SelectedEntry = null;
+            }
+
+            var resultBody = importResult.SkippedCount > 0
+                ? Strings.Format(
+                    "ImportResult.BodyWithSkipped",
+                    importedCount,
+                    importResult.SkippedCount)
+                : Strings.Format("ImportResult.Body", importedCount);
+            await ShowMessageAsync(
+                Strings.Get("ImportResult.Title", "匯入完成"),
+                resultBody);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "匯入項目清單失敗。");
+            await ShowMessageAsync(
+                Strings.Get("ImportFailed.Title", "無法匯入項目"),
+                Strings.Get("ImportFailed.Body", "檔案格式不正確或無法讀取，請確認後再試一次。"));
+        }
+    }
+
+    private async void OnExportClick(object sender, RoutedEventArgs e)
+    {
+        if (!ViewModel.Entries.HasEntries)
+        {
+            return;
+        }
+
+        try
+        {
+            var picker = new FileSavePicker(AppWindow.Id)
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = "input-accelerator-entries",
+                DefaultFileExtension = ".json",
+                CommitButtonText = Strings.Get("ExportPickerCommitButtonText", "匯出"),
+            };
+            picker.FileTypeChoices.Add(
+                Strings.Get("JsonFileTypeDisplayName", "JSON 檔"),
+                new List<string> { ".json" });
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null || string.IsNullOrWhiteSpace(file.Path))
+            {
+                return;
+            }
+
+            var count = ViewModel.Entries.Entries.Count;
+            await ViewModel.Entries.ExportAsync(file.Path);
+            await ShowMessageAsync(
+                Strings.Get("ExportResult.Title", "匯出完成"),
+                Strings.Format("ExportResult.Body", count, file.Path));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "匯出項目清單失敗。");
+            await ShowMessageAsync(
+                Strings.Get("ExportFailed.Title", "無法匯出項目"),
+                Strings.Get("ExportFailed.Body", "無法寫入檔案，請確認儲存位置後再試一次。"));
+        }
+    }
+
+    private async Task ShowMessageAsync(string title, string body)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = RootGrid.ActualTheme,
+            Title = title,
+            Content = new TextBlock { Text = body, TextWrapping = TextWrapping.Wrap },
+            CloseButtonText = Strings.Get("TransferDialog.CloseButtonText", "關閉"),
+        };
+
+        await dialog.ShowAsync();
     }
 
     private async void OnEditClick(object sender, RoutedEventArgs e)

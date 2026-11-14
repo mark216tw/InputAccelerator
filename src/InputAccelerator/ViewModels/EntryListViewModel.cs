@@ -109,6 +109,52 @@ public sealed class EntryListViewModel : ObservableObject
         return WriteSnapshotAsync(cancellationToken);
     }
 
+    public async Task<int> ImportAsync(
+        EntryImportResult importResult,
+        EntryImportMode mode,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(importResult);
+
+        var existing = Entries.Select(static entry => entry.ToModel()).ToList();
+        var imported = importResult.Entries;
+        var merged = mode == EntryImportMode.Replace
+            ? imported
+            : EntryListMerger.Merge(existing, imported);
+
+        _suppressPersistence = true;
+        try
+        {
+            Entries.Clear();
+            foreach (var entry in merged)
+            {
+                Entries.Add(new TextEntryViewModel(entry));
+            }
+        }
+        finally
+        {
+            _suppressPersistence = false;
+        }
+
+        OnPropertyChanged(nameof(HasEntries));
+        await SaveNowAsync(cancellationToken);
+
+        return imported.Count;
+    }
+
+    public Task<EntryImportResult> ReadImportFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        return _repository.ImportFromFileAsync(filePath, cancellationToken);
+    }
+
+    public Task ExportAsync(string filePath, CancellationToken cancellationToken = default)
+    {
+        var snapshot = Entries.Select(static entry => entry.ToModel()).ToList();
+        return _repository.ExportToFileAsync(filePath, snapshot, cancellationToken);
+    }
+
     private void OnEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(HasEntries));

@@ -242,6 +242,12 @@
   <data name="AddButton.Content" xml:space="preserve">
     <value>新增</value>
   </data>
+  <data name="ImportButton.Content" xml:space="preserve">
+    <value>匯入</value>
+  </data>
+  <data name="ExportButton.Content" xml:space="preserve">
+    <value>匯出</value>
+  </data>
   <data name="EditButton.Content" xml:space="preserve">
     <value>編輯</value>
   </data>
@@ -283,6 +289,9 @@
   </data>
   <data name="FloatingRestoreButton" xml:space="preserve">
     <value>還原浮動視窗</value>
+  </data>
+  <data name="FloatingOpenMainButton" xml:space="preserve">
+    <value>開啟主視窗</value>
   </data>
 
   <data name="EditEntryDialog.AddTitle" xml:space="preserve">
@@ -351,6 +360,71 @@
   </data>
   <data name="DeleteDialog.CloseButtonText" xml:space="preserve">
     <value>取消</value>
+  </data>
+
+  <data name="JsonFileTypeDisplayName" xml:space="preserve">
+    <value>JSON 檔</value>
+  </data>
+  <data name="ImportPickerCommitButtonText" xml:space="preserve">
+    <value>匯入</value>
+  </data>
+  <data name="ImportDialog.Title" xml:space="preserve">
+    <value>匯入項目清單</value>
+  </data>
+  <data name="ImportDialog.Body" xml:space="preserve">
+    <value>已讀取 {0} 筆有效項目，{1} 筆無效項目會略過。
+
+要附加到現有清單，還是先清空目前清單再匯入？</value>
+  </data>
+  <data name="ImportDialog.AppendButtonText" xml:space="preserve">
+    <value>附加到現有清單</value>
+  </data>
+  <data name="ImportDialog.ReplaceButtonText" xml:space="preserve">
+    <value>取代目前清單</value>
+  </data>
+  <data name="ImportDialog.CancelButtonText" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="ImportEmpty.Title" xml:space="preserve">
+    <value>沒有可匯入的項目</value>
+  </data>
+  <data name="ImportEmpty.Body" xml:space="preserve">
+    <value>檔案中沒有有效的文字或按鍵組合項目。</value>
+  </data>
+  <data name="ImportResult.Title" xml:space="preserve">
+    <value>匯入完成</value>
+  </data>
+  <data name="ImportResult.Body" xml:space="preserve">
+    <value>已匯入 {0} 筆項目。</value>
+  </data>
+  <data name="ImportResult.BodyWithSkipped" xml:space="preserve">
+    <value>已匯入 {0} 筆項目，略過 {1} 筆無效項目。</value>
+  </data>
+  <data name="ImportFailed.Title" xml:space="preserve">
+    <value>無法匯入項目</value>
+  </data>
+  <data name="ImportFailed.Body" xml:space="preserve">
+    <value>檔案格式不正確或無法讀取，請確認後再試一次。</value>
+  </data>
+  <data name="ExportPickerCommitButtonText" xml:space="preserve">
+    <value>匯出</value>
+  </data>
+  <data name="ExportResult.Title" xml:space="preserve">
+    <value>匯出完成</value>
+  </data>
+  <data name="ExportResult.Body" xml:space="preserve">
+    <value>已匯出 {0} 筆項目到：
+
+{1}</value>
+  </data>
+  <data name="ExportFailed.Title" xml:space="preserve">
+    <value>無法匯出項目</value>
+  </data>
+  <data name="ExportFailed.Body" xml:space="preserve">
+    <value>無法寫入檔案，請確認儲存位置後再試一次。</value>
+  </data>
+  <data name="TransferDialog.CloseButtonText" xml:space="preserve">
+    <value>關閉</value>
   </data>
 
   <data name="TrayTooltip" xml:space="preserve">

@@ -65,6 +65,7 @@ public sealed class AppCoordinator
         _appearance.Apply(_settings.Current.Theme, _settings.Current.FloatingBackgroundIndex);
 
         _mainViewModel.OverlayVisibilityChanged += OnOverlayVisibilityChanged;
+        _floatingWindow.OpenMainWindowRequested += OnOpenMainWindowRequested;
         _singleInstance.ActivationRequested += OnActivationRequested;
         _injectionService.InjectionFailed += OnInjectionFailed;
 
@@ -106,6 +107,11 @@ public sealed class AppCoordinator
     }
 
     private void OnActivationRequested(object? sender, EventArgs e)
+    {
+        _mainWindow.ShowManager();
+    }
+
+    private void OnOpenMainWindowRequested(object? sender, EventArgs e)
     {
         _mainWindow.ShowManager();
     }

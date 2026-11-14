@@ -113,8 +113,8 @@ InputAccelerator.slnx
 
 | 檔案 | 責任 |
 | --- | --- |
-| `MainWindow.xaml(.cs)` | 主視窗、項目清單、新增／編輯／刪除／排序、More 按鈕、縮到系統匣 |
-| `FloatingWindow.xaml(.cs)` | 無邊框置頂浮動視窗、膠囊清單、拖曳、調整大小、收合／還原 |
+| `MainWindow.xaml(.cs)` | 主視窗、項目清單、新增／編輯／刪除／排序、JSON 匯入／匯出、More 按鈕、縮到系統匣 |
+| `FloatingWindow.xaml(.cs)` | 無邊框置頂浮動視窗、膠囊清單、開啟主視窗、拖曳、調整大小、收合／還原 |
 | `SettingsWindow.xaml(.cs)` | 顯示模式與浮動視窗背景設定，非模態 singleton 視窗 |
 | `EditEntryDialog.xaml(.cs)` | 新增／編輯文字或按鍵組合的 `ContentDialog` |
 | `HotkeyRecorder.xaml(.cs)` | 多步驟按鍵序列錄製控制項，讀取修飾鍵狀態、累積步驟並在閒置後完成 |
@@ -123,7 +123,7 @@ InputAccelerator.slnx
 
 | 檔案 | 責任 |
 | --- | --- |
-| `EntryListViewModel` | 項目清單集合、新增／更新／刪除／移動、儲存協調 |
+| `EntryListViewModel` | 項目清單集合、新增／更新／刪除／移動、匯入／匯出與儲存協調 |
 | `MainViewModel` | 主視窗設定狀態、輸入模式、主題、背景選項、版本文字 |
 | `FloatingBarViewModel` | 將項目清單轉為浮動視窗膠囊，依類型呼叫文字或按鍵組合輸入服務 |
 | `FloatingEntryItemViewModel` | 單一膠囊項目的顯示文字、預覽與配色 |
@@ -148,7 +148,8 @@ InputAccelerator.slnx
 
 | 服務 | 責任 |
 | --- | --- |
-| `EntryRepository` | 非同步載入／儲存項目清單，使用暫存檔原子替換，損壞檔備份 |
+| `EntryRepository` | 非同步載入／儲存項目清單，支援指定路徑匯入／匯出，使用暫存檔原子替換，損壞檔備份 |
+| `EntryListMerger` | 合併現有與匯入項目，保留順序並重新配發重複的 GUID |
 | `SettingsStore` | 非同步載入／儲存設定，列舉與背景索引正規化 |
 | `TextInputComposer` | 將文字拆解為 Unicode 字元與 Enter／Tab 虛擬鍵單元 |
 | `HotkeyParser` | 解析、正規化與格式化 `Ctrl+C`、`Alt+H, W` 等按鍵序列，維護支援的按鍵對照表 |
@@ -244,11 +245,28 @@ EditEntryDialog
   → MainViewModel.AddEntry / UpdateEntry / RemoveEntry
   → EntryListViewModel
   → EntryRepository.SaveAsync（背景非同步）
-  → FloatingBarViewModel.RebuildItems
+   → FloatingBarViewModel.RebuildItems
   → FloatingWindow 更新膠囊
 ```
 
-### 7.2 設定
+### 7.2 匯入與匯出
+
+```text
+MainWindow 匯出
+  → FileSavePicker 取得路徑
+  → EntryListViewModel.ExportAsync
+  → EntryRepository.ExportToFileAsync（正規化後原子寫入 JSON）
+
+MainWindow 匯入
+  → FileOpenPicker 取得路徑
+  → EntryRepository.ImportFromFileAsync（正規化並統計略過筆數）
+  → ContentDialog 選擇附加或取代
+  → EntryListMerger.Merge 或直接取代
+  → EntryListViewModel 批次更新並儲存一次
+  → FloatingBarViewModel.RebuildItems
+```
+
+### 7.3 設定
 
 ```text
 SettingsWindow / 主視窗
@@ -258,7 +276,7 @@ SettingsWindow / 主視窗
   → 主視窗／設定視窗／浮動視窗套用主題與配色
 ```
 
-### 7.3 輸入
+### 7.4 輸入
 
 ```text
 FloatingWindow.OnEntryClick
@@ -301,6 +319,7 @@ FloatingWindow.OnEntryClick
 - 按鍵組合會轉為正規化格式（例如 `control+escape` → `Ctrl+Esc`、`alt+h, w` → `Alt+H, W`）。
 - 多步驟以逗號分隔，最多 8 步；單一組合鍵格式不變。
 - 儲存時先寫入 `.tmp` 再以 `File.Move(..., overwrite: true)` 原子替換。
+- 匯出檔採用相同格式；匯入時略過空白文字與無效按鍵組合，附加模式會為重複 GUID 重新配發。
 
 ### 8.2 `settings.json`
 
@@ -342,7 +361,8 @@ FloatingWindow.OnEntryClick
 
 單元測試聚焦於與 UI 無關的 Core 邏輯：
 
-- `EntryRepositoryTests`：載入、儲存、損壞檔備份、ID 正規化、按鍵組合與舊版資料相容。
+- `EntryRepositoryTests`：載入、儲存、匯入／匯出、損壞檔備份、ID 正規化、按鍵組合與舊版資料相容。
+- `EntryListMergerTests`：合併順序、重複與空 GUID 重新配發、按鍵組合欄位保留。
 - `SettingsStoreTests`：設定載入、列舉正規化、無效背景索引。
 - `HotkeyParserTests`：解析、正規化、特殊鍵、無效組合、多步驟序列與步數上限。
 - `HotkeyInputComposerTests`：修飾鍵順序、反向放開、Extended Key、序列批次與跨步驟修飾鍵保持。
