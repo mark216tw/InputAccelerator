@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Reflection;
@@ -14,7 +13,6 @@ public sealed partial class MainViewModel : ObservableObject
 {
     private readonly EntryListViewModel _entryList;
     private readonly SettingsService _settings;
-    private readonly AppearanceService _appearance;
     private readonly ILogger<MainViewModel> _logger;
     private bool _isLoadingSettings;
 
@@ -25,30 +23,17 @@ public sealed partial class MainViewModel : ObservableObject
     public partial bool AutoEnterAfterSelection { get; set; }
 
     [ObservableProperty]
-    public partial int InputModeIndex { get; set; }
-
-    [ObservableProperty]
-    public partial int ThemeIndex { get; set; }
-
-    [ObservableProperty]
-    public partial FloatingBackgroundOption? SelectedBackgroundOption { get; set; }
-
-    [ObservableProperty]
     public partial TextEntryViewModel? SelectedEntry { get; set; }
 
     public MainViewModel(
         EntryListViewModel entryList,
         SettingsService settings,
-        AppearanceService appearance,
         ILogger<MainViewModel> logger)
     {
         _entryList = entryList;
         _settings = settings;
-        _appearance = appearance;
         _logger = logger;
         _entryList.Entries.CollectionChanged += OnEntriesCollectionChanged;
-
-        BackgroundOptions = new ObservableCollection<FloatingBackgroundOption>(FloatingBackgroundOption.CreateAll());
 
         var assembly = Assembly.GetExecutingAssembly();
         var informational = assembly
@@ -64,8 +49,6 @@ public sealed partial class MainViewModel : ObservableObject
     public event EventHandler<bool>? OverlayVisibilityChanged;
 
     public EntryListViewModel Entries => _entryList;
-
-    public ObservableCollection<FloatingBackgroundOption> BackgroundOptions { get; }
 
     public bool HasSelection => SelectedEntry is not null;
 
@@ -83,15 +66,6 @@ public sealed partial class MainViewModel : ObservableObject
         {
             IsOverlayEnabled = settings.IsOverlayEnabled;
             AutoEnterAfterSelection = settings.AutoEnterAfterSelection;
-            InputModeIndex = (int)settings.InputMode is 1 ? 1 : 0;
-            ThemeIndex = settings.Theme switch
-            {
-                AppTheme.Light => 1,
-                AppTheme.Dark => 2,
-                _ => 0,
-            };
-            SelectedBackgroundOption = BackgroundOptions.FirstOrDefault(
-                option => option.Index == settings.FloatingBackgroundIndex) ?? BackgroundOptions[0];
         }
         finally
         {
@@ -157,47 +131,6 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         _settings.Current.AutoEnterAfterSelection = value;
-        PersistSettingsAsync();
-    }
-
-    partial void OnInputModeIndexChanged(int value)
-    {
-        if (_isLoadingSettings)
-        {
-            return;
-        }
-
-        _settings.Current.InputMode = value == 1 ? InputMode.ClipboardPaste : InputMode.SimulatedInput;
-        PersistSettingsAsync();
-    }
-
-    partial void OnThemeIndexChanged(int value)
-    {
-        if (_isLoadingSettings)
-        {
-            return;
-        }
-
-        var theme = value switch
-        {
-            1 => AppTheme.Light,
-            2 => AppTheme.Dark,
-            _ => AppTheme.System,
-        };
-        _settings.Current.Theme = theme;
-        _appearance.Apply(theme, _settings.Current.FloatingBackgroundIndex);
-        PersistSettingsAsync();
-    }
-
-    partial void OnSelectedBackgroundOptionChanged(FloatingBackgroundOption? value)
-    {
-        if (_isLoadingSettings || value is null)
-        {
-            return;
-        }
-
-        _settings.Current.FloatingBackgroundIndex = value.Index;
-        _appearance.Apply(_settings.Current.Theme, value.Index);
         PersistSettingsAsync();
     }
 

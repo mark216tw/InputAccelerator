@@ -58,7 +58,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
@@ -72,18 +71,6 @@
                         Grid.Column="1"
                         VerticalAlignment="Top"
                         IsOn="{x:Bind ViewModel.AutoEnterAfterSelection, Mode=TwoWay}" />
-
-                    <StackPanel Grid.Column="2" Spacing="4">
-                        <TextBlock x:Uid="InputModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <ComboBox
-                            x:Uid="InputModeCombo"
-                            MinWidth="160"
-                            HorizontalAlignment="Left"
-                            SelectedIndex="{x:Bind ViewModel.InputModeIndex, Mode=TwoWay}">
-                            <ComboBoxItem x:Uid="InputModeSimulated" />
-                            <ComboBoxItem x:Uid="InputModeClipboard" />
-                        </ComboBox>
-                    </StackPanel>
                 </Grid>
             </Border>
 

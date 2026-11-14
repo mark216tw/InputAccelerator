@@ -4,6 +4,72 @@
 
 ---
 
+## 2026-11-14 - v1.3.10
+
+### 目標
+調整設定頁面的設定項目順序為：顯示模式、浮動視窗背景、浮動視窗自動縮小、文字輸入方式。
+
+### 變更
+- `SettingsWindow.xaml`：重新排列四個設定區塊，功能與繫結維持不變。
+- `USER_GUIDE.md`、`README.md`：同步調整設定項目說明順序。
+- 版本提升至 1.3.10，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`。
+- `BUILD_AND_RELEASE.md`：版本範例更新為 1.3.10。
+- 發佈 x64 與 arm64 framework-dependent 版本，並建立 GitHub Release `v1.3.10`。
+
+### 問題與解法
+- 無。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+## 2026-11-14 - v1.3.9
+
+### 目標
+設定視窗新增「儲存」與「關閉」按鈕，設定改為按下儲存後才生效，關閉時可放棄未儲存的變更。
+
+### 變更
+- 新增 `SettingsViewModel`：持有設定視窗的草稿值、儲存與未儲存變更判斷。
+- `SettingsWindow.xaml`：加入底部「關閉」與「儲存」按鈕；設定改綁定 `SettingsViewModel`。
+- `SettingsWindow.xaml.cs`：儲存成功後關閉；儲存失敗顯示提示；關閉時若有未儲存變更顯示確認對話框。
+- `MainViewModel`：移除僅供設定視窗使用的輸入方式、顯示模式、背景與自動縮小屬性及即時套用邏輯。
+- `App.xaml.cs`：註冊 `SettingsViewModel`。
+- `Resources.resw`：新增儲存、關閉、放棄變更與儲存失敗字串。
+- 版本提升至 1.3.9，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`README.md`、`USER_GUIDE.md`。
+
+### 問題與解法
+- 原本設定視窗直接綁定 `MainViewModel`，任何變更都會立即套用並儲存；改以 `SettingsViewModel` 保存草稿，只有 `SaveAsync` 成功後才寫入 `SettingsService` 並套用外觀。
+- 儲存失敗時會還原記憶體中的設定與外觀，避免畫面與實際儲存內容不一致。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+- 從系統匣或主視窗關閉而連帶隱藏設定視窗時，不會顯示未儲存提示。
+
+## 2026-11-14 - v1.3.8
+
+### 目標
+將「文字輸入方式」從主視窗移到設定視窗，並新增浮動視窗閒置自動縮小設定；預設不自動縮小。
+
+### 變更
+- `AppSettings`：新增 `FloatingAutoCollapseSeconds`。
+- 新增 `FloatingAutoCollapsePresets`：定義不自動縮小（0）、10、20、30、60、120、180、300 秒與索引轉換。
+- `SettingsStore`：驗證自動縮小秒數，非法值重設為 0。
+- `SettingsService`：Clone 同步複製新欄位，新增 `SettingsSaved` 事件。
+- `MainWindow.xaml`：移除輸入方式設定卡，主視窗只保留浮動視窗開關與自動 Enter。
+- `SettingsWindow.xaml`：新增輸入方式與浮動視窗自動縮小設定，內容改用 `ScrollViewer`，視窗高度調整為 580 DIP。
+- `MainViewModel`：新增 `FloatingAutoCollapseIndex` 並即時保存設定。
+- `FloatingWindow`：新增閒置自動縮小計時器；滑鼠移入、移動、點擊、拖曳、調整大小或送出文字都會重新計時；收合、隱藏、關閉時停止計時。
+- `Resources.resw`：新增自動縮小相關字串。
+- 新增 `FloatingAutoCollapsePresetsTests`，並更新 `SettingsStoreTests`。
+- 版本提升至 1.3.8，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`README.md`、`USER_GUIDE.md`。
+
+### 問題與解法
+- 設定儲存事件原本不存在，浮動視窗無法即時套用新時間；改由 `SettingsService.SaveAsync` 成功後引發 `SettingsSaved`。
+- 滑鼠移動事件頻繁，若每次移動都重設計時器會增加負擔；改為記錄最後活動時間，計時器到期時再依經過時間決定是否重新排程。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+- 自動縮小狀態不跨程式重啟保存，重新啟動仍以展開狀態開啟。
+
 ## 2026-11-13 - v1.3.7
 
 ### 目標

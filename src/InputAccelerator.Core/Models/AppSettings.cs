@@ -12,5 +12,7 @@ public sealed class AppSettings
 
     public int FloatingBackgroundIndex { get; set; } = FloatingBackgroundPresets.FollowSystemIndex;
 
+    public int FloatingAutoCollapseSeconds { get; set; } = FloatingAutoCollapsePresets.DefaultSeconds;
+
     public WindowPlacement? FloatingWindowPlacement { get; set; }
 }

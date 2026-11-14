@@ -23,11 +23,16 @@ public sealed partial class FloatingWindow : Window
     private readonly ILogger<FloatingWindow> _logger;
     private readonly FloatingWindowInterop _interop;
     private readonly AppearanceService _appearance;
+    private readonly SettingsService _settings;
+    private readonly DispatcherQueue _dispatcher;
     private readonly DispatcherQueueTimer _topmostTimer;
+    private readonly DispatcherQueueTimer _autoCollapseTimer;
     private readonly IntPtr _windowHandle;
     private bool _isSending;
     private bool _isDragging;
     private bool _isResizing;
+    private bool _isVisible;
+    private long _lastActivityTimestamp;
     private WindowPlacement? _expandedPlacement;
     private NativeMethods.Point _dragStartCursor;
     private PointInt32 _dragStartWindowPosition;
@@ -38,11 +43,13 @@ public sealed partial class FloatingWindow : Window
     public FloatingWindow(
         FloatingBarViewModel viewModel,
         AppearanceService appearance,
+        SettingsService settings,
         ILogger<FloatingWindow> logger)
     {
         InitializeComponent();
         ViewModel = viewModel;
         _appearance = appearance;
+        _settings = settings;
         _logger = logger;
         ChipHost.ItemsSource = ViewModel.Items;
         ViewModel.Items.CollectionChanged += (_, _) => UpdateEmptyState();
@@ -69,14 +76,27 @@ public sealed partial class FloatingWindow : Window
         _windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
         _interop.Setup(_windowHandle);
 
-        var dispatcher = DispatcherQueue.GetForCurrentThread();
-        _topmostTimer = dispatcher.CreateTimer();
+        _dispatcher = DispatcherQueue.GetForCurrentThread();
+        _topmostTimer = _dispatcher.CreateTimer();
         _topmostTimer.Interval = TopmostReassertInterval;
         _topmostTimer.IsRepeating = true;
         _topmostTimer.Tick += OnTopmostTimerTick;
+
+        _autoCollapseTimer = _dispatcher.CreateTimer();
+        _autoCollapseTimer.IsRepeating = false;
+        _autoCollapseTimer.Tick += OnAutoCollapseTimerTick;
+
         RootGrid.AddHandler(
             UIElement.PointerPressedEvent,
             new PointerEventHandler(OnRootPointerPressed),
+            handledEventsToo: true);
+        RootGrid.AddHandler(
+            UIElement.PointerEnteredEvent,
+            new PointerEventHandler(OnRootPointerActivity),
+            handledEventsToo: true);
+        RootGrid.AddHandler(
+            UIElement.PointerMovedEvent,
+            new PointerEventHandler(OnRootPointerActivity),
             handledEventsToo: true);
 
         var dragHandleText = Strings.Get("DragHandleText", "拖曳移動視窗");
@@ -96,6 +116,7 @@ public sealed partial class FloatingWindow : Window
         AutomationProperties.SetName(CollapsedBlock, restoreText);
 
         _appearance.Changed += OnAppearanceChanged;
+        _settings.SettingsSaved += OnSettingsSaved;
         Closed += OnClosed;
     }
 
@@ -116,15 +137,20 @@ public sealed partial class FloatingWindow : Window
     public void ShowWithoutActivation()
     {
         AppWindow.Show(activateWindow: false);
+        _isVisible = true;
         _interop.EnsureTopmost();
         if (!_topmostTimer.IsRunning)
         {
             _topmostTimer.Start();
         }
+
+        RestartAutoCollapseTimer();
     }
 
     public void HideBar()
     {
+        _isVisible = false;
+        _autoCollapseTimer.Stop();
         _topmostTimer.Stop();
         AppWindow.Hide();
     }
@@ -153,6 +179,90 @@ public sealed partial class FloatingWindow : Window
         ViewModel.ApplyPalette(palette);
     }
 
+    private void OnSettingsSaved(object? sender, EventArgs e)
+    {
+        if (_dispatcher.HasThreadAccess)
+        {
+            ApplyAutoCollapseSetting();
+        }
+        else
+        {
+            _dispatcher.TryEnqueue(ApplyAutoCollapseSetting);
+        }
+    }
+
+    private void ApplyAutoCollapseSetting()
+    {
+        var seconds = _settings.Current.FloatingAutoCollapseSeconds;
+        if (!_isVisible || IsCollapsed || seconds <= 0)
+        {
+            _autoCollapseTimer.Stop();
+            return;
+        }
+
+        var interval = TimeSpan.FromSeconds(seconds);
+        if (!_autoCollapseTimer.IsRunning || _autoCollapseTimer.Interval != interval)
+        {
+            RestartAutoCollapseTimer();
+        }
+    }
+
+    private void MarkActivity()
+    {
+        _lastActivityTimestamp = Environment.TickCount64;
+        if (!_isVisible || IsCollapsed || _autoCollapseTimer.IsRunning)
+        {
+            return;
+        }
+
+        RestartAutoCollapseTimer();
+    }
+
+    private void RestartAutoCollapseTimer()
+    {
+        _autoCollapseTimer.Stop();
+        var seconds = _settings.Current.FloatingAutoCollapseSeconds;
+        if (!_isVisible || IsCollapsed || seconds <= 0)
+        {
+            return;
+        }
+
+        _lastActivityTimestamp = Environment.TickCount64;
+        _autoCollapseTimer.Interval = TimeSpan.FromSeconds(seconds);
+        _autoCollapseTimer.Start();
+    }
+
+    private void OnAutoCollapseTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        if (!_isVisible || IsCollapsed)
+        {
+            return;
+        }
+
+        var seconds = _settings.Current.FloatingAutoCollapseSeconds;
+        if (seconds <= 0)
+        {
+            return;
+        }
+
+        if (_isDragging || _isResizing)
+        {
+            RestartAutoCollapseTimer();
+            return;
+        }
+
+        var interval = TimeSpan.FromSeconds(seconds);
+        var idle = TimeSpan.FromMilliseconds(Environment.TickCount64 - _lastActivityTimestamp);
+        if (idle < interval)
+        {
+            sender.Interval = interval - idle;
+            sender.Start();
+            return;
+        }
+
+        Collapse();
+    }
+
     private async void OnEntryClick(object sender, RoutedEventArgs e)
     {
         if (_isSending ||
@@ -161,6 +271,7 @@ public sealed partial class FloatingWindow : Window
             return;
         }
 
+        MarkActivity();
         _isSending = true;
         try
         {
@@ -178,10 +289,17 @@ public sealed partial class FloatingWindow : Window
 
     private void OnCollapseClick(object sender, RoutedEventArgs e)
     {
+        Collapse();
+    }
+
+    private void Collapse()
+    {
         if (IsCollapsed)
         {
             return;
         }
+
+        _autoCollapseTimer.Stop();
 
         var position = AppWindow.Position;
         var size = AppWindow.Size;
@@ -236,6 +354,7 @@ public sealed partial class FloatingWindow : Window
 
         _interop.EnsureTopmost();
         CollapseStateChanged?.Invoke(this, false);
+        RestartAutoCollapseTimer();
     }
 
     private void UpdateCollapsedVisualState()
@@ -273,6 +392,7 @@ public sealed partial class FloatingWindow : Window
         UpdateDragPosition();
         _isDragging = false;
         DragHandle.ReleasePointerCapture(e.Pointer);
+        MarkActivity();
         e.Handled = true;
     }
 
@@ -329,6 +449,7 @@ public sealed partial class FloatingWindow : Window
         UpdateResize();
         _isResizing = false;
         ResizeGrip.ReleasePointerCapture(e.Pointer);
+        MarkActivity();
         e.Handled = true;
     }
 
@@ -372,15 +493,26 @@ public sealed partial class FloatingWindow : Window
 
     private void OnRootPointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        MarkActivity();
         _interop.EnsureTopmost();
+    }
+
+    private void OnRootPointerActivity(object sender, PointerRoutedEventArgs e)
+    {
+        MarkActivity();
     }
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
         _appearance.Changed -= OnAppearanceChanged;
+        _settings.SettingsSaved -= OnSettingsSaved;
         _topmostTimer.Stop();
         _topmostTimer.Tick -= OnTopmostTimerTick;
+        _autoCollapseTimer.Stop();
+        _autoCollapseTimer.Tick -= OnAutoCollapseTimerTick;
         RootGrid.RemoveHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnRootPointerPressed));
+        RootGrid.RemoveHandler(UIElement.PointerEnteredEvent, new PointerEventHandler(OnRootPointerActivity));
+        RootGrid.RemoveHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnRootPointerActivity));
         _interop.Dispose();
     }
 

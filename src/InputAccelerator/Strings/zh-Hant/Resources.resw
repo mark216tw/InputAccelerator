@@ -81,7 +81,34 @@
     <value>設定</value>
   </data>
   <data name="SettingsSubheader.Text" xml:space="preserve">
-    <value>調整顯示模式與浮動視窗外觀。</value>
+    <value>調整輸入方式、顯示模式與浮動視窗設定。</value>
+  </data>
+  <data name="SettingsSaveButton.Content" xml:space="preserve">
+    <value>儲存</value>
+  </data>
+  <data name="SettingsCloseButton.Content" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="SettingsDiscardTitle" xml:space="preserve">
+    <value>尚未儲存</value>
+  </data>
+  <data name="SettingsDiscardBody" xml:space="preserve">
+    <value>設定尚未儲存，要放棄變更嗎？</value>
+  </data>
+  <data name="SettingsDiscardConfirm" xml:space="preserve">
+    <value>放棄變更</value>
+  </data>
+  <data name="SettingsDiscardCancel" xml:space="preserve">
+    <value>繼續編輯</value>
+  </data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve">
+    <value>無法儲存設定</value>
+  </data>
+  <data name="SettingsSaveFailedBody" xml:space="preserve">
+    <value>請稍後再試。</value>
+  </data>
+  <data name="SettingsSaveFailedClose" xml:space="preserve">
+    <value>關閉</value>
   </data>
   <data name="OverlayToggle.Header" xml:space="preserve">
     <value>啟用浮動視窗</value>
@@ -115,6 +142,39 @@
   </data>
   <data name="InputModeHint.Text" xml:space="preserve">
     <value>模擬鍵盤輸入不會佔用剪貼簿；若目標程式收不到文字，可改用剪貼簿貼上。</value>
+  </data>
+  <data name="FloatingAutoCollapseLabel.Text" xml:space="preserve">
+    <value>浮動視窗自動縮小</value>
+  </data>
+  <data name="FloatingAutoCollapseCombo.AutomationProperties.Name" xml:space="preserve">
+    <value>浮動視窗自動縮小</value>
+  </data>
+  <data name="FloatingAutoCollapseHint.Text" xml:space="preserve">
+    <value>浮動視窗超過指定時間沒有滑鼠互動或送出文字時，會自動縮小成小區塊。</value>
+  </data>
+  <data name="FloatingAutoCollapseOff.Content" xml:space="preserve">
+    <value>不自動縮小</value>
+  </data>
+  <data name="FloatingAutoCollapse10Seconds.Content" xml:space="preserve">
+    <value>10 秒</value>
+  </data>
+  <data name="FloatingAutoCollapse20Seconds.Content" xml:space="preserve">
+    <value>20 秒</value>
+  </data>
+  <data name="FloatingAutoCollapse30Seconds.Content" xml:space="preserve">
+    <value>30 秒</value>
+  </data>
+  <data name="FloatingAutoCollapse1Minute.Content" xml:space="preserve">
+    <value>1 分鐘</value>
+  </data>
+  <data name="FloatingAutoCollapse2Minutes.Content" xml:space="preserve">
+    <value>2 分鐘</value>
+  </data>
+  <data name="FloatingAutoCollapse3Minutes.Content" xml:space="preserve">
+    <value>3 分鐘</value>
+  </data>
+  <data name="FloatingAutoCollapse5Minutes.Content" xml:space="preserve">
+    <value>5 分鐘</value>
   </data>
   <data name="DisplayModeLabel.Text" xml:space="preserve">
     <value>顯示模式</value>

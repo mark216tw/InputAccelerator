@@ -48,6 +48,7 @@ public partial class App : Application
             builder.Services.AddSingleton<AppearanceService>();
             builder.Services.AddSingleton<EntryListViewModel>();
             builder.Services.AddSingleton<MainViewModel>();
+            builder.Services.AddSingleton<SettingsViewModel>();
             builder.Services.AddSingleton<FloatingBarViewModel>();
             builder.Services.AddSingleton<ForegroundWindowTracker>();
             builder.Services.AddSingleton<InputInjectionService>();

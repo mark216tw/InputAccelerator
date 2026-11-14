@@ -4,6 +4,7 @@ using InputAccelerator.Services;
 using InputAccelerator.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
 
 namespace InputAccelerator.Views;
@@ -11,11 +12,14 @@ namespace InputAccelerator.Views;
 public sealed partial class SettingsWindow : Window
 {
     private const int DefaultWidthDip = 520;
-    private const int DefaultHeightDip = 400;
+    private const int DefaultHeightDip = 580;
 
     private readonly AppearanceService _appearance;
+    private bool _isClosing;
+    private bool _isSaving;
+    private bool _needsReload = true;
 
-    public SettingsWindow(MainViewModel viewModel, AppearanceService appearance)
+    public SettingsWindow(SettingsViewModel viewModel, AppearanceService appearance)
     {
         InitializeComponent();
         ViewModel = viewModel;
@@ -39,10 +43,16 @@ public sealed partial class SettingsWindow : Window
         AppWindow.Closing += OnClosing;
     }
 
-    public MainViewModel ViewModel { get; }
+    public SettingsViewModel ViewModel { get; }
 
     public void ShowSettings(Window owner)
     {
+        if (_needsReload)
+        {
+            ViewModel.Reload();
+            _needsReload = false;
+        }
+
         ConfigureWindowGeometry(owner);
         AppWindow.Show(activateWindow: true);
         Activate();
@@ -61,7 +71,101 @@ public sealed partial class SettingsWindow : Window
     private void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
         args.Cancel = true;
-        AppWindow.Hide();
+        _ = CloseSettingsAsync();
+    }
+
+    private async void OnSaveClick(object sender, RoutedEventArgs e)
+    {
+        if (_isSaving)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            if (await ViewModel.SaveAsync())
+            {
+                _needsReload = true;
+                HideSettings();
+            }
+            else
+            {
+                await ShowSaveFailedAsync();
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async void OnCloseClick(object sender, RoutedEventArgs e)
+    {
+        await CloseSettingsAsync();
+    }
+
+    private async Task CloseSettingsAsync()
+    {
+        if (_isClosing)
+        {
+            return;
+        }
+
+        _isClosing = true;
+        try
+        {
+            if (ViewModel.HasUnsavedChanges && !await ConfirmDiscardAsync())
+            {
+                return;
+            }
+
+            _needsReload = true;
+            HideSettings();
+        }
+        finally
+        {
+            _isClosing = false;
+        }
+    }
+
+    private async Task<bool> ConfirmDiscardAsync()
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = RootGrid.ActualTheme,
+            Title = Strings.Get("SettingsDiscardTitle", "尚未儲存"),
+            Content = new TextBlock
+            {
+                Text = Strings.Get("SettingsDiscardBody", "設定尚未儲存，要放棄變更嗎？"),
+                TextWrapping = TextWrapping.Wrap,
+            },
+            PrimaryButtonText = Strings.Get("SettingsDiscardConfirm", "放棄變更"),
+            CloseButtonText = Strings.Get("SettingsDiscardCancel", "繼續編輯"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    private async Task ShowSaveFailedAsync()
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = RootGrid.ActualTheme,
+            Title = Strings.Get("SettingsSaveFailedTitle", "無法儲存設定"),
+            Content = new TextBlock
+            {
+                Text = Strings.Get("SettingsSaveFailedBody", "請稍後再試。"),
+                TextWrapping = TextWrapping.Wrap,
+            },
+            CloseButtonText = Strings.Get("SettingsSaveFailedClose", "關閉"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        await dialog.ShowAsync();
     }
 
     private void ConfigureWindowGeometry(Window owner)
@@ -77,6 +181,9 @@ public sealed partial class SettingsWindow : Window
         var workArea = DisplayArea
             .GetFromWindowId(owner.AppWindow.Id, DisplayAreaFallback.Primary)
             .WorkArea;
+
+        width = Math.Min(width, workArea.Width);
+        height = Math.Min(height, workArea.Height);
 
         var x = ownerPosition.X + (ownerSize.Width - width) / 2;
         var y = ownerPosition.Y + (ownerSize.Height - height) / 2;

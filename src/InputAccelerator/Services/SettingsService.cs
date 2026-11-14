@@ -16,6 +16,8 @@ public sealed class SettingsService
 
     public AppSettings Current { get; private set; } = new();
 
+    public event EventHandler? SettingsSaved;
+
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _store.LoadAsync(cancellationToken).ConfigureAwait(true);
@@ -37,6 +39,7 @@ public sealed class SettingsService
             }
 
             await _store.SaveAsync(snapshot, cancellationToken).ConfigureAwait(true);
+            SettingsSaved?.Invoke(this, EventArgs.Empty);
         }
         finally
         {
@@ -62,6 +65,7 @@ public sealed class SettingsService
             InputMode = source.InputMode,
             Theme = source.Theme,
             FloatingBackgroundIndex = source.FloatingBackgroundIndex,
+            FloatingAutoCollapseSeconds = source.FloatingAutoCollapseSeconds,
             FloatingWindowPlacement = source.FloatingWindowPlacement?.Clone(),
         };
     }

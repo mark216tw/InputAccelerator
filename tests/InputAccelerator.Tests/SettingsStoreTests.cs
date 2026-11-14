@@ -28,6 +28,7 @@ public sealed class SettingsStoreTests : IDisposable
             InputMode = InputMode.ClipboardPaste,
             Theme = AppTheme.Dark,
             FloatingBackgroundIndex = 5,
+            FloatingAutoCollapseSeconds = 120,
             FloatingWindowPlacement = new WindowPlacement { X = 100, Y = 200, Width = 240, Height = 360 },
         };
 
@@ -39,6 +40,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(InputMode.ClipboardPaste, loaded.InputMode);
         Assert.Equal(AppTheme.Dark, loaded.Theme);
         Assert.Equal(5, loaded.FloatingBackgroundIndex);
+        Assert.Equal(120, loaded.FloatingAutoCollapseSeconds);
         Assert.NotNull(loaded.FloatingWindowPlacement);
         Assert.Equal(100, loaded.FloatingWindowPlacement!.X);
         Assert.Equal(360, loaded.FloatingWindowPlacement.Height);
@@ -57,6 +59,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(InputMode.SimulatedInput, loaded.InputMode);
         Assert.Equal(AppTheme.System, loaded.Theme);
         Assert.Equal(FloatingBackgroundPresets.FollowSystemIndex, loaded.FloatingBackgroundIndex);
+        Assert.Equal(FloatingAutoCollapsePresets.DefaultSeconds, loaded.FloatingAutoCollapseSeconds);
         Assert.Null(loaded.FloatingWindowPlacement);
     }
 
@@ -80,6 +83,27 @@ public sealed class SettingsStoreTests : IDisposable
 
         Assert.Equal(AppTheme.System, loaded.Theme);
         Assert.Equal(FloatingBackgroundPresets.FollowSystemIndex, loaded.FloatingBackgroundIndex);
+        Assert.Equal(FloatingAutoCollapsePresets.DefaultSeconds, loaded.FloatingAutoCollapseSeconds);
+    }
+
+    [Fact]
+    public async Task Load_WhenAutoCollapseInvalid_NormalizesToDefault()
+    {
+        var path = Path.Combine(_directory, "settings.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "isOverlayEnabled": true,
+              "inputMode": "simulatedInput",
+              "floatingAutoCollapseSeconds": 999
+            }
+            """);
+        var store = new SettingsStore(path);
+
+        var loaded = await store.LoadAsync();
+
+        Assert.Equal(FloatingAutoCollapsePresets.DefaultSeconds, loaded.FloatingAutoCollapseSeconds);
     }
 
     [Fact]

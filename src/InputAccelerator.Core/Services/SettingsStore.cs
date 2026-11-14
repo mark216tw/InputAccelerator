@@ -122,6 +122,11 @@ public sealed class SettingsStore
             settings.FloatingBackgroundIndex = FloatingBackgroundPresets.FollowSystemIndex;
         }
 
+        if (!FloatingAutoCollapsePresets.IsValidSeconds(settings.FloatingAutoCollapseSeconds))
+        {
+            settings.FloatingAutoCollapseSeconds = FloatingAutoCollapsePresets.DefaultSeconds;
+        }
+
         if (settings.FloatingWindowPlacement is { } placement)
         {
             if (placement.Width <= 0 || placement.Height <= 0)

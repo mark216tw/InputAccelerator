@@ -10,77 +10,132 @@
         MinHeight="320"
         Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid
-            Margin="20"
+            Padding="20"
             RowSpacing="16">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Spacing="2">
-                <TextBlock x:Uid="SettingsHeader" Style="{StaticResource TitleTextBlockStyle}" />
-                <TextBlock x:Uid="SettingsSubheader" Style="{StaticResource HintTextStyle}" />
-            </StackPanel>
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Disabled"
+                VerticalScrollBarVisibility="Auto"
+                VerticalScrollMode="Auto">
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="2">
+                        <TextBlock x:Uid="SettingsHeader" Style="{StaticResource TitleTextBlockStyle}" />
+                        <TextBlock x:Uid="SettingsSubheader" Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
 
-            <StackPanel Grid.Row="1" Spacing="6">
-                <TextBlock x:Uid="DisplayModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <ComboBox
-                    x:Uid="DisplayModeCombo"
-                    MinWidth="180"
-                    HorizontalAlignment="Left"
-                    SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}">
-                    <ComboBoxItem x:Uid="DisplayModeSystem" />
-                    <ComboBoxItem x:Uid="DisplayModeLight" />
-                    <ComboBoxItem x:Uid="DisplayModeDark" />
-                </ComboBox>
-            </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Uid="DisplayModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Uid="DisplayModeCombo"
+                            MinWidth="180"
+                            HorizontalAlignment="Left"
+                            SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="DisplayModeSystem" />
+                            <ComboBoxItem x:Uid="DisplayModeLight" />
+                            <ComboBoxItem x:Uid="DisplayModeDark" />
+                        </ComboBox>
+                    </StackPanel>
 
-            <StackPanel Grid.Row="2" Spacing="6">
-                <TextBlock x:Uid="FloatingBackgroundLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <GridView
-                    Padding="0"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    IsItemClickEnabled="False"
-                    ItemsSource="{x:Bind ViewModel.BackgroundOptions}"
-                    SelectedItem="{x:Bind ViewModel.SelectedBackgroundOption, Mode=TwoWay}"
-                    SelectionMode="Single"
-                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                    ScrollViewer.HorizontalScrollMode="Disabled"
-                    ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                    ScrollViewer.VerticalScrollMode="Disabled">
-                    <GridView.ItemContainerStyle>
-                        <Style TargetType="GridViewItem">
-                            <Setter Property="Width" Value="32" />
-                            <Setter Property="Height" Value="32" />
-                            <Setter Property="MinWidth" Value="0" />
-                            <Setter Property="MinHeight" Value="0" />
-                            <Setter Property="Margin" Value="0,0,2,2" />
-                            <Setter Property="Padding" Value="0" />
-                            <Setter Property="CornerRadius" Value="16" />
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
-                            <Setter Property="VerticalContentAlignment" Value="Center" />
-                            <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
-                            <Setter Property="ToolTipService.ToolTip" Value="{Binding Label}" />
-                        </Style>
-                    </GridView.ItemContainerStyle>
-                    <GridView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:FloatingBackgroundOption">
-                            <Border
-                                Width="24"
-                                Height="24"
-                                AutomationProperties.Name="{x:Bind Label}"
-                                Background="{x:Bind PreviewBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                ToolTipService.ToolTip="{x:Bind Label}" />
-                        </DataTemplate>
-                    </GridView.ItemTemplate>
-                </GridView>
-                <TextBlock x:Uid="FloatingBackgroundHint" Style="{StaticResource HintTextStyle}" />
-            </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Uid="FloatingBackgroundLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <GridView
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            IsItemClickEnabled="False"
+                            ItemsSource="{x:Bind ViewModel.BackgroundOptions}"
+                            SelectedItem="{x:Bind ViewModel.SelectedBackgroundOption, Mode=TwoWay}"
+                            SelectionMode="Single"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.HorizontalScrollMode="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollMode="Disabled">
+                            <GridView.ItemContainerStyle>
+                                <Style TargetType="GridViewItem">
+                                    <Setter Property="Width" Value="32" />
+                                    <Setter Property="Height" Value="32" />
+                                    <Setter Property="MinWidth" Value="0" />
+                                    <Setter Property="MinHeight" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,2,2" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="CornerRadius" Value="16" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+                                    <Setter Property="ToolTipService.ToolTip" Value="{Binding Label}" />
+                                </Style>
+                            </GridView.ItemContainerStyle>
+                            <GridView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FloatingBackgroundOption">
+                                    <Border
+                                        Width="24"
+                                        Height="24"
+                                        AutomationProperties.Name="{x:Bind Label}"
+                                        Background="{x:Bind PreviewBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        ToolTipService.ToolTip="{x:Bind Label}" />
+                                </DataTemplate>
+                            </GridView.ItemTemplate>
+                        </GridView>
+                        <TextBlock x:Uid="FloatingBackgroundHint" Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Uid="FloatingAutoCollapseLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Uid="FloatingAutoCollapseCombo"
+                            MinWidth="180"
+                            HorizontalAlignment="Left"
+                            SelectedIndex="{x:Bind ViewModel.FloatingAutoCollapseIndex, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="FloatingAutoCollapseOff" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse10Seconds" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse20Seconds" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse30Seconds" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse1Minute" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse2Minutes" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse3Minutes" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse5Minutes" />
+                        </ComboBox>
+                        <TextBlock x:Uid="FloatingAutoCollapseHint" Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Uid="InputModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Uid="InputModeCombo"
+                            MinWidth="180"
+                            HorizontalAlignment="Left"
+                            SelectedIndex="{x:Bind ViewModel.InputModeIndex, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="InputModeSimulated" />
+                            <ComboBoxItem x:Uid="InputModeClipboard" />
+                        </ComboBox>
+                        <TextBlock x:Uid="InputModeHint" Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Grid
+                Grid.Row="1"
+                HorizontalAlignment="Right"
+                ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button x:Uid="SettingsCloseButton" Click="OnCloseClick" />
+                <Button
+                    Grid.Column="1"
+                    x:Uid="SettingsSaveButton"
+                    Click="OnSaveClick"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </Grid>
         </Grid>
     </Grid>
 </Window>
