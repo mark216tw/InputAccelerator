@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-11-14 - v1.5.0
+
+### 目標
+讓按鍵組合支援多步驟序列，例如 Office 功能區的 `Alt+H` 後再按 `W`。序列以逗號分隔並正規化，送出時依錄製時的修飾鍵狀態決定是否跨步驟保持按住。
+
+### 變更
+- Core：新增 `HotkeySequence`；`HotkeyParser` 新增序列解析／格式化、`TryParseChord` 與 8 步上限。
+- `HotkeyInputComposer`：新增 `HotkeyInputBatch`、`ComposeSequence` 與步驟間 150ms 停頓，支援跨步驟共用修飾鍵。
+- `InputInjectionService`：`SendHotkeyAsync` 改為逐批送出序列；每批前確認前景視窗、失敗或取消時釋放修飾鍵。
+- `HotkeyRecorder`：改為多步驟錄製，依實際修飾鍵狀態累積步驟，停止按鍵 1.2 秒自動完成，Esc 取消；抑制按鍵自動重複。
+- `EditEntryDialog`：儲存前先提交錄製內容，避免焦點事件順序造成序列漏提交。
+- `EntryRepository`：載入／儲存改用序列解析與正規化。
+- 資源字串：更新按鍵組合提示、序列錄製提示與驗證文字。
+- 測試：新增序列解析、修飾鍵保持、批次送出、儲存正規化與無效序列測試。
+- 版本提升至 1.5.0，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`README.md`、`USER_GUIDE.md`、`SYSTEM_DESIGN.md`、`ARCHITECTURE.md`、`BUILD_AND_RELEASE.md`。
+- 發佈 x64 與 arm64 framework-dependent 版本，並建立 GitHub Release `v1.5.0`。
+
+### 問題與解法
+- `DispatcherQueueTimer` 同時存在於 `Microsoft.UI.Dispatching` 與 `Windows.System`，造成 CS0104 模稜兩可；改用 alias 明確指向 `Microsoft.UI.Dispatching`。
+- 序列若在步驟邊界直接重按共用修飾鍵，可能讓部分目標程式的 Alt 狀態被切換；改為在目前步驟結尾判斷下一步是否需要該修飾鍵，必要時才放開。
+- 錄製時長按按鍵會觸發重複 KeyDown；以目前按下的按鍵集合過濾，放開後才允許再次加入同一個按鍵。
+- 多批送出若中途取消或失敗，可能留下按下的修飾鍵；在 `SendBatches` 的 `finally` 中補送 KeyUp。
+
+### 待辦／已知限制
+- 尚未在實機以 Word／Office 與 VS Code 驗證序列行為。
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+- 序列最多 8 步，步驟間固定 150ms，尚未提供設定介面。
+- `Alt+H+W` 不是有效格式，需使用逗號分隔。
+- `Win+L`、`Ctrl+Alt+Del` 等系統保留組合鍵仍無法保證送出。
+
 ## 2026-11-14 - v1.4.0
 
 ### 目標

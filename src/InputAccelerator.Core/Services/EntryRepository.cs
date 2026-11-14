@@ -122,7 +122,7 @@ public sealed class EntryRepository
             var kind = Enum.IsDefined(entry.Kind) ? entry.Kind : EntryKind.Text;
             if (kind == EntryKind.Hotkey)
             {
-                if (!HotkeyParser.TryParse(entry.Hotkey, out var chord))
+                if (!HotkeyParser.TryParse(entry.Hotkey, out var sequence))
                 {
                     continue;
                 }
@@ -134,7 +134,7 @@ public sealed class EntryRepository
                 {
                     Id = id,
                     Kind = EntryKind.Hotkey,
-                    Hotkey = HotkeyParser.Format(chord),
+                    Hotkey = HotkeyParser.Format(sequence),
                     Label = label,
                 });
                 continue;

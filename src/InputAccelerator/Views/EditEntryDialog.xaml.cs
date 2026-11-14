@@ -60,6 +60,7 @@ public sealed partial class EditEntryDialog : ContentDialog
     {
         if (SelectedKind == EntryKind.Hotkey)
         {
+            Recorder.CommitRecording();
             if (!HotkeyParser.IsValid(Recorder.Hotkey))
             {
                 args.Cancel = true;

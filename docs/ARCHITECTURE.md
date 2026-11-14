@@ -117,7 +117,7 @@ InputAccelerator.slnx
 | `FloatingWindow.xaml(.cs)` | 無邊框置頂浮動視窗、膠囊清單、拖曳、調整大小、收合／還原 |
 | `SettingsWindow.xaml(.cs)` | 顯示模式與浮動視窗背景設定，非模態 singleton 視窗 |
 | `EditEntryDialog.xaml(.cs)` | 新增／編輯文字或按鍵組合的 `ContentDialog` |
-| `HotkeyRecorder.xaml(.cs)` | 按鍵組合錄製控制項，讀取修飾鍵狀態並顯示正規化組合字串 |
+| `HotkeyRecorder.xaml(.cs)` | 多步驟按鍵序列錄製控制項，讀取修飾鍵狀態、累積步驟並在閒置後完成 |
 
 ### 4.2 ViewModels
 
@@ -151,8 +151,8 @@ InputAccelerator.slnx
 | `EntryRepository` | 非同步載入／儲存項目清單，使用暫存檔原子替換，損壞檔備份 |
 | `SettingsStore` | 非同步載入／儲存設定，列舉與背景索引正規化 |
 | `TextInputComposer` | 將文字拆解為 Unicode 字元與 Enter／Tab 虛擬鍵單元 |
-| `HotkeyParser` | 解析、正規化與格式化 `Ctrl+C` 等按鍵組合，維護支援的按鍵對照表 |
-| `HotkeyInputComposer` | 將按鍵組合轉為修飾鍵、主鍵與 Extended Key 的送出序列 |
+| `HotkeyParser` | 解析、正規化與格式化 `Ctrl+C`、`Alt+H, W` 等按鍵序列，維護支援的按鍵對照表 |
+| `HotkeyInputComposer` | 將按鍵序列轉為批次送出單元，處理修飾鍵保持、釋放、Extended Key 與步驟停頓 |
 | `TextPreview` | 產生清單與對話框使用的單行預覽文字 |
 | `WindowPlacementValidator` | 依螢幕工作區、DPI 與最小尺寸驗證視窗位置 |
 
@@ -174,8 +174,9 @@ InputAccelerator.slnx
                  剪貼簿：寫入 Clipboard 並 Flush()
                          等待 120ms 後送出 Ctrl+V
         按鍵組合：HotkeyParser.TryParse()
-                 HotkeyInputComposer.Compose()
-                 SendInput 依序送出修飾鍵、主鍵與 Extended Key
+                  HotkeyInputComposer.ComposeSequence()
+                  逐批 SendInput 送出各步驟；相鄰步驟共用修飾鍵時保持按住
+                  步驟之間停頓 150ms；失敗或取消時釋放修飾鍵
   → 失敗時透過事件通知系統匣氣球提示（5 秒節流）
 ```
 
@@ -284,14 +285,21 @@ FloatingWindow.OnEntryClick
     "kind": "hotkey",
     "label": "複製",
     "hotkey": "Ctrl+C"
+  },
+  {
+    "id": "4b3a2918-0e7d-4c6f-9a51-2d8c7b6e5f40",
+    "kind": "hotkey",
+    "label": "功能區",
+    "hotkey": "Alt+H, W"
   }
 ]
 ```
 
 - 採 camelCase、縮排輸出；`kind` 以字串儲存，缺少時視為 `text`。
-- 使用寬鬆 JSON 編碼，中文與 `+` 等字元保持可讀。
+- 使用寬鬆 JSON 編碼，中文與 `+`、`,` 等字元保持可讀。
 - 載入時忽略空白文字與無效按鍵組合，修正重複或空的 GUID。
-- 按鍵組合會轉為正規化格式（例如 `control+escape` → `Ctrl+Esc`）。
+- 按鍵組合會轉為正規化格式（例如 `control+escape` → `Ctrl+Esc`、`alt+h, w` → `Alt+H, W`）。
+- 多步驟以逗號分隔，最多 8 步；單一組合鍵格式不變。
 - 儲存時先寫入 `.tmp` 再以 `File.Move(..., overwrite: true)` 原子替換。
 
 ### 8.2 `settings.json`
@@ -336,8 +344,8 @@ FloatingWindow.OnEntryClick
 
 - `EntryRepositoryTests`：載入、儲存、損壞檔備份、ID 正規化、按鍵組合與舊版資料相容。
 - `SettingsStoreTests`：設定載入、列舉正規化、無效背景索引。
-- `HotkeyParserTests`：解析、正規化、特殊鍵、無效組合。
-- `HotkeyInputComposerTests`：修飾鍵順序、反向放開、Extended Key。
+- `HotkeyParserTests`：解析、正規化、特殊鍵、無效組合、多步驟序列與步數上限。
+- `HotkeyInputComposerTests`：修飾鍵順序、反向放開、Extended Key、序列批次與跨步驟修飾鍵保持。
 - `TextInputComposerTests`：CRLF／LF、`\n` 逸出、Tab、Unicode 拆分。
 - `TextEscapeTests`：`\n` 轉換與無效逸出保留。
 - `TextPreviewTests`：預覽長度與換行處理。

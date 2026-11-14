@@ -4,6 +4,9 @@ namespace InputAccelerator.Core.Services;
 
 public static class HotkeyParser
 {
+    public const int MaxSequenceSteps = 8;
+
+    private const char SequenceSeparator = ',';
     private const int VirtualKeyShift = 0x10;
     private const int VirtualKeyControl = 0x11;
     private const int VirtualKeyMenu = 0x12;
@@ -32,10 +35,37 @@ public static class HotkeyParser
     private static readonly Dictionary<string, KeyInfo> KeysByName = CreateKeyMap();
     private static readonly Dictionary<int, KeyInfo> KeysByVirtualKey = CreateVirtualKeyMap();
 
-    public static bool TryParse(string? text, out HotkeyChord chord)
+    public static bool TryParse(string? text, out HotkeySequence sequence)
+    {
+        sequence = HotkeySequence.Empty;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var parts = text.Split(SequenceSeparator, StringSplitOptions.TrimEntries);
+        if (parts.Length > MaxSequenceSteps)
+        {
+            return false;
+        }
+
+        var steps = new HotkeyChord[parts.Length];
+        for (var index = 0; index < parts.Length; index++)
+        {
+            if (string.IsNullOrEmpty(parts[index]) || !TryParseChord(parts[index], out steps[index]))
+            {
+                return false;
+            }
+        }
+
+        sequence = new HotkeySequence(steps);
+        return true;
+    }
+
+    public static bool TryParseChord(string? text, out HotkeyChord chord)
     {
         chord = default;
-        if (string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrWhiteSpace(text) || text.Contains(SequenceSeparator))
         {
             return false;
         }
@@ -125,6 +155,23 @@ public static class HotkeyParser
 
         segments.Add(key.Name);
         return string.Join('+', segments);
+    }
+
+    public static string Format(HotkeySequence sequence)
+    {
+        ArgumentNullException.ThrowIfNull(sequence);
+        if (sequence.IsEmpty)
+        {
+            return string.Empty;
+        }
+
+        var steps = new string[sequence.Count];
+        for (var index = 0; index < sequence.Count; index++)
+        {
+            steps[index] = Format(sequence.Steps[index]);
+        }
+
+        return string.Join(", ", steps);
     }
 
     public static bool IsValid(string? text)

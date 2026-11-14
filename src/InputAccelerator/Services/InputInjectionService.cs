@@ -36,7 +36,7 @@ public sealed class InputInjectionService
 
         try
         {
-            if (!await TryFocusTargetAsync(mode.ToString(), cancellationToken).ConfigureAwait(true))
+            if (await FocusTargetAsync(mode.ToString(), cancellationToken).ConfigureAwait(true) == IntPtr.Zero)
             {
                 return;
             }
@@ -63,7 +63,14 @@ public sealed class InputInjectionService
 
     public async Task SendHotkeyAsync(string? hotkey, CancellationToken cancellationToken = default)
     {
-        if (!HotkeyParser.TryParse(hotkey, out var chord))
+        if (!HotkeyParser.TryParse(hotkey, out var sequence))
+        {
+            ReportFailure("按鍵組合無效。");
+            return;
+        }
+
+        var batches = HotkeyInputComposer.ComposeSequence(sequence);
+        if (batches.Count == 0)
         {
             ReportFailure("按鍵組合無效。");
             return;
@@ -71,7 +78,8 @@ public sealed class InputInjectionService
 
         try
         {
-            if (!await TryFocusTargetAsync("Hotkey", cancellationToken).ConfigureAwait(true))
+            var target = await FocusTargetAsync("Hotkey", cancellationToken).ConfigureAwait(true);
+            if (target == IntPtr.Zero)
             {
                 return;
             }
@@ -79,11 +87,7 @@ public sealed class InputInjectionService
             await Task.Delay(35, cancellationToken).ConfigureAwait(true);
 
             var sent = await Task.Run(
-                () =>
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    return SendChord(chord);
-                },
+                () => SendBatches(batches, target, cancellationToken),
                 cancellationToken).ConfigureAwait(true);
 
             if (!sent)
@@ -101,13 +105,13 @@ public sealed class InputInjectionService
         }
     }
 
-    private async Task<bool> TryFocusTargetAsync(string mode, CancellationToken cancellationToken)
+    private async Task<IntPtr> FocusTargetAsync(string mode, CancellationToken cancellationToken)
     {
         var target = _tracker.ResolveInjectionTarget();
         if (target == IntPtr.Zero)
         {
             ReportFailure("找不到可輸入的前景視窗。");
-            return false;
+            return IntPtr.Zero;
         }
 
         var foreground = NativeMethods.GetForegroundWindow();
@@ -131,10 +135,10 @@ public sealed class InputInjectionService
                 target.ToInt64(),
                 foreground.ToInt64());
             ReportFailure("無法將焦點還原到目標視窗。");
-            return false;
+            return IntPtr.Zero;
         }
 
-        return true;
+        return target;
     }
 
     private async Task<bool> SendViaSimulatedInputAsync(string text, CancellationToken cancellationToken)
@@ -299,9 +303,58 @@ public sealed class InputInjectionService
         return inserted == inputs.Length;
     }
 
+    private static bool SendBatches(
+        IReadOnlyList<HotkeyInputBatch> batches,
+        IntPtr target,
+        CancellationToken cancellationToken)
+    {
+        var completed = false;
+        var heldModifiers = new List<HotkeyInputUnit>(4);
+        try
+        {
+            for (var index = 0; index < batches.Count; index++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (index > 0 && NativeMethods.GetForegroundWindow() != target)
+                {
+                    return false;
+                }
+
+                var batch = batches[index];
+                UpdateHeldModifiers(heldModifiers, batch.Units);
+                if (!SendHotkeyUnits(batch.Units))
+                {
+                    return false;
+                }
+
+                if (batch.DelayAfterMilliseconds > 0
+                    && cancellationToken.WaitHandle.WaitOne(batch.DelayAfterMilliseconds))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+
+            completed = true;
+            return true;
+        }
+        finally
+        {
+            if (!completed)
+            {
+                ReleaseHeldModifiers(heldModifiers);
+            }
+        }
+    }
+
     private static bool SendChord(HotkeyChord chord)
     {
         var units = HotkeyInputComposer.Compose(chord);
+        return units.Count > 0 && SendHotkeyUnits(units);
+    }
+
+    private static bool SendHotkeyUnits(IReadOnlyList<HotkeyInputUnit> units)
+    {
         if (units.Count == 0)
         {
             return false;
@@ -311,24 +364,7 @@ public sealed class InputInjectionService
         for (var index = 0; index < units.Count; index++)
         {
             var unit = units[index];
-            var flags = unit.IsKeyUp ? NativeMethods.KeyeventfKeyUp : 0u;
-            if (unit.IsExtended)
-            {
-                flags |= NativeMethods.KeyeventfExtendedKey;
-            }
-
-            inputs[index] = new NativeMethods.Input
-            {
-                Type = NativeMethods.InputKeyboard,
-                Data = new NativeMethods.InputUnion
-                {
-                    Keyboard = new NativeMethods.KeyboardInput
-                    {
-                        VirtualKey = unit.VirtualKey,
-                        Flags = flags,
-                    },
-                },
-            };
+            inputs[index] = CreateHotkeyInput(unit.VirtualKey, unit.IsKeyUp, unit.IsExtended);
         }
 
         var inserted = NativeMethods.SendInput(
@@ -338,8 +374,57 @@ public sealed class InputInjectionService
         return inserted == inputs.Length;
     }
 
-    private static NativeMethods.Input CreateVirtualKeyInput(ushort virtualKey, bool keyUp)
+    private static void UpdateHeldModifiers(
+        List<HotkeyInputUnit> heldModifiers,
+        IReadOnlyList<HotkeyInputUnit> units)
     {
+        foreach (var unit in units)
+        {
+            if (!HotkeyParser.IsModifierKey(unit.VirtualKey))
+            {
+                continue;
+            }
+
+            if (unit.IsKeyUp)
+            {
+                heldModifiers.RemoveAll(held => held.VirtualKey == unit.VirtualKey);
+            }
+            else if (!heldModifiers.Exists(held => held.VirtualKey == unit.VirtualKey))
+            {
+                heldModifiers.Add(unit);
+            }
+        }
+    }
+
+    private static void ReleaseHeldModifiers(List<HotkeyInputUnit> heldModifiers)
+    {
+        if (heldModifiers.Count == 0)
+        {
+            return;
+        }
+
+        var inputs = new NativeMethods.Input[heldModifiers.Count];
+        for (var index = 0; index < heldModifiers.Count; index++)
+        {
+            var unit = heldModifiers[heldModifiers.Count - 1 - index];
+            inputs[index] = CreateHotkeyInput(unit.VirtualKey, keyUp: true, unit.IsExtended);
+        }
+
+        NativeMethods.SendInput(
+            (uint)inputs.Length,
+            inputs,
+            Marshal.SizeOf<NativeMethods.Input>());
+        heldModifiers.Clear();
+    }
+
+    private static NativeMethods.Input CreateHotkeyInput(ushort virtualKey, bool keyUp, bool isExtended)
+    {
+        var flags = keyUp ? NativeMethods.KeyeventfKeyUp : 0u;
+        if (isExtended)
+        {
+            flags |= NativeMethods.KeyeventfExtendedKey;
+        }
+
         return new NativeMethods.Input
         {
             Type = NativeMethods.InputKeyboard,
@@ -348,10 +433,15 @@ public sealed class InputInjectionService
                 Keyboard = new NativeMethods.KeyboardInput
                 {
                     VirtualKey = virtualKey,
-                    Flags = keyUp ? NativeMethods.KeyeventfKeyUp : 0,
+                    Flags = flags,
                 },
             },
         };
+    }
+
+    private static NativeMethods.Input CreateVirtualKeyInput(ushort virtualKey, bool keyUp)
+    {
+        return CreateHotkeyInput(virtualKey, keyUp, isExtended: false);
     }
 
     private void ReportFailure(string reason)

@@ -110,6 +110,29 @@ public sealed class EntryRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveAndLoad_RoundTripsHotkeySequences()
+    {
+        var repository = new EntryRepository(_filePath);
+
+        await repository.SaveAsync(
+        [
+            new TextEntry
+            {
+                Kind = EntryKind.Hotkey,
+                Hotkey = "alt+h, w",
+                Label = "序列",
+            },
+        ]);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(EntryKind.Hotkey, entry.Kind);
+        Assert.Equal("Alt+H, W", entry.Hotkey);
+        Assert.Equal("序列", entry.Label);
+    }
+
+    [Fact]
     public async Task Save_WritesKindAsCamelCaseString()
     {
         var repository = new EntryRepository(_filePath);
@@ -153,6 +176,7 @@ public sealed class EntryRepositoryTests : IDisposable
             $$"""
             [
               { "id": "{{Guid.NewGuid()}}", "kind": "hotkey", "hotkey": "Ctrl+" },
+              { "id": "{{Guid.NewGuid()}}", "kind": "hotkey", "hotkey": "Alt+H+W" },
               { "id": "{{Guid.NewGuid()}}", "kind": "text", "content": "有效文字" }
             ]
             """);
