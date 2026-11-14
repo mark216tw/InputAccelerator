@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-14 - v1.3.11
+
+### 目標
+將浮動視窗縮小後的收合區塊再縮為目前尺寸的 80%，減少桌面佔用。
+
+### 變更
+- `FloatingWindow.xaml.cs`：`CollapsedSizeDip` 由 44 改為 35（44 × 0.8）。
+- `FloatingWindowInterop.cs`：收合最小追蹤尺寸由 40 DIP 改為 32 DIP，維持小於實際收合尺寸。
+- `FloatingWindow.xaml`：收合圖示 `FontSize` 由 15 改為 12。
+- 版本提升至 1.3.11，同步更新 `CHANGELOG.md`、`RELEASE_NOTES.md`、`BUILD_AND_RELEASE.md`。
+
+### 問題與解法
+- 收合區塊維持右上角對齊，縮小後不會影響展開時儲存的位置與大小。
+- 35 DIP 小於一般 44 DIP 觸控建議值，滑鼠操作不受影響；若後續支援觸控再評估。
+
+### 待辦／已知限制
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+- 尚未在 125%／150% DPI 下實機確認縮放後外觀。
+
 ## 2026-11-14 - v1.3.10
 
 ### 目標

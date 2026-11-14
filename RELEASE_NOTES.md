@@ -1,11 +1,11 @@
-# 快速輸入 1.3.10
+# 快速輸入 1.3.11
 
 這是一個 Windows 常用文字快速輸入工具，提供 x64 與 arm64 免安裝版本。
 
 ## 下載
 
-- `InputAccelerator-1.3.10-win-x64.zip`：一般 Intel／AMD 電腦。
-- `InputAccelerator-1.3.10-win-arm64.zip`：Windows on Arm 裝置。
+- `InputAccelerator-1.3.11-win-x64.zip`：一般 Intel／AMD 電腦。
+- `InputAccelerator-1.3.11-win-arm64.zip`：Windows on Arm 裝置。
 
 兩者皆為 framework-dependent（非 Self-Contained）版本，解壓縮後直接執行 `InputAccelerator.exe`。本專案不提供安裝檔。
 
@@ -38,8 +38,8 @@
 
 ## 本次更新
 
-- 設定頁面調整為依序顯示：顯示模式、浮動視窗背景、浮動視窗自動縮小、文字輸入方式。
-- 設定視窗的「儲存」與「關閉」行為維持不變，調整後按「儲存」才會生效。
+- 浮動視窗縮小後的區塊尺寸縮為原本的 80%，減少桌面佔用。
+- 收合圖示同步縮小，維持比例。
 
 ## 使用提醒
 

@@ -6,8 +6,8 @@ internal sealed class FloatingWindowInterop : IDisposable
 {
     private const int MinimumWidthDip = 140;
     private const int MinimumHeightDip = 80;
-    private const int CollapsedMinimumWidthDip = 40;
-    private const int CollapsedMinimumHeightDip = 40;
+    private const int CollapsedMinimumWidthDip = 32;
+    private const int CollapsedMinimumHeightDip = 32;
 
     private readonly NativeMethods.SubclassProc _subclassProcedure;
     private readonly UIntPtr _subclassId = new(1);
