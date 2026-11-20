@@ -1,21 +1,10 @@
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using InputAccelerator.Core.Models;
 
 namespace InputAccelerator.Core.Services;
 
 public sealed class EntryRepository
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-    };
-
     private readonly string _filePath;
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
@@ -102,7 +91,10 @@ public sealed class EntryRepository
             FileShare.Read,
             bufferSize: 4096,
             FileOptions.Asynchronous | FileOptions.SequentialScan);
-        var source = await JsonSerializer.DeserializeAsync<List<TextEntry>>(stream, SerializerOptions, cancellationToken)
+        var source = await JsonSerializer.DeserializeAsync(
+                stream,
+                InputAcceleratorJsonContext.Entries.ListTextEntry,
+                cancellationToken)
             .ConfigureAwait(false);
         var normalized = NormalizeEntries(source);
         var skipped = (source?.Count ?? 0) - normalized.Count;
@@ -132,7 +124,11 @@ public sealed class EntryRepository
                 bufferSize: 4096,
                 FileOptions.Asynchronous))
             {
-                await JsonSerializer.SerializeAsync(stream, entries, SerializerOptions, cancellationToken)
+                await JsonSerializer.SerializeAsync(
+                        stream,
+                        entries,
+                        InputAcceleratorJsonContext.Entries.IReadOnlyListTextEntry,
+                        cancellationToken)
                     .ConfigureAwait(false);
             }
 

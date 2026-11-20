@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using InputAccelerator.Core.Models;
 using InputAccelerator.Helpers;
 using InputAccelerator.Interop;
@@ -24,21 +25,26 @@ public sealed partial class MainWindow : Window
 
     private readonly ILogger<MainWindow> _logger;
     private readonly AppearanceService _appearance;
-    private readonly SettingsWindow _settingsWindow;
+    private readonly Func<SettingsWindow> _settingsWindowFactory;
+    private readonly MemoryTrimService _memoryTrim;
     private readonly MinimumSizeInterop _minimumSizeInterop = new(MinimumWidthDip, MinimumHeightDip);
+    private SettingsWindow? _settingsWindow;
 
     public MainWindow(
         MainViewModel viewModel,
         AppearanceService appearance,
-        SettingsWindow settingsWindow,
+        Func<SettingsWindow> settingsWindowFactory,
+        MemoryTrimService memoryTrim,
         ILogger<MainWindow> logger)
     {
         InitializeComponent();
         ViewModel = viewModel;
         _appearance = appearance;
-        _settingsWindow = settingsWindow;
+        _settingsWindowFactory = settingsWindowFactory;
+        _memoryTrim = memoryTrim;
         _logger = logger;
-        ViewModel.Entries.Entries.CollectionChanged += (_, _) => UpdateEmptyState();
+        ViewModel.Entries.Entries.CollectionChanged += OnEntriesCollectionChanged;
+        ViewModel.Entries.BatchUpdateCompleted += OnEntriesBatchUpdateCompleted;
         UpdateEmptyState();
 
         Title = Strings.Get("AppName", "快速輸入");
@@ -47,14 +53,11 @@ public sealed partial class MainWindow : Window
             AppWindow.SetIcon(AppPaths.IconFile);
         }
 
+        RootGrid.RequestedTheme = _appearance.CurrentElementTheme;
         ConfigureWindowGeometry();
         _minimumSizeInterop.Setup(WinRT.Interop.WindowNative.GetWindowHandle(this));
         _appearance.Changed += OnAppearanceChanged;
-        Closed += (_, _) =>
-        {
-            _appearance.Changed -= OnAppearanceChanged;
-            _minimumSizeInterop.Dispose();
-        };
+        Closed += OnClosed;
     }
 
     public MainViewModel ViewModel { get; }
@@ -62,6 +65,30 @@ public sealed partial class MainWindow : Window
     private void OnAppearanceChanged(object? sender, AppearanceChangedEventArgs e)
     {
         RootGrid.RequestedTheme = e.ElementTheme;
+    }
+
+    private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (!ViewModel.Entries.IsBatchUpdating)
+        {
+            UpdateEmptyState();
+        }
+    }
+
+    private void OnEntriesBatchUpdateCompleted(object? sender, EventArgs e)
+    {
+        UpdateEmptyState();
+    }
+
+    private void OnClosed(object sender, WindowEventArgs args)
+    {
+        CloseSettingsIfOpen();
+        _appearance.Changed -= OnAppearanceChanged;
+        ViewModel.Entries.Entries.CollectionChanged -= OnEntriesCollectionChanged;
+        ViewModel.Entries.BatchUpdateCompleted -= OnEntriesBatchUpdateCompleted;
+        Closed -= OnClosed;
+        _minimumSizeInterop.Dispose();
+        Bindings.StopTracking();
     }
 
     public void ShowManager()
@@ -108,8 +135,17 @@ public sealed partial class MainWindow : Window
 
     public void HideToTray()
     {
-        _settingsWindow.HideSettings();
+        CloseSettingsIfOpen();
         AppWindow.Hide();
+    }
+
+    public void CloseSettingsIfOpen()
+    {
+        if (_settingsWindow is { } settingsWindow)
+        {
+            _settingsWindow = null;
+            settingsWindow.ForceClose();
+        }
     }
 
     private void ConfigureWindowGeometry()
@@ -130,7 +166,30 @@ public sealed partial class MainWindow : Window
 
     private void OnMoreClick(object sender, RoutedEventArgs e)
     {
-        _settingsWindow.ShowSettings(this);
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
+        var settingsWindow = _settingsWindowFactory();
+        settingsWindow.Closed += OnSettingsWindowClosed;
+        _settingsWindow = settingsWindow;
+        settingsWindow.ShowSettings(this);
+    }
+
+    private void OnSettingsWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (sender is SettingsWindow settingsWindow)
+        {
+            settingsWindow.Closed -= OnSettingsWindowClosed;
+            if (ReferenceEquals(_settingsWindow, settingsWindow))
+            {
+                _settingsWindow = null;
+            }
+        }
+
+        _memoryTrim.ScheduleTrim();
     }
 
     private async void OnAddClick(object sender, RoutedEventArgs e)

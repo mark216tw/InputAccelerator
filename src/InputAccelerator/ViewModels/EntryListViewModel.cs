@@ -25,9 +25,14 @@ public sealed class EntryListViewModel : ObservableObject
 
     public bool HasEntries => Entries.Count > 0;
 
+    public bool IsBatchUpdating { get; private set; }
+
+    public event EventHandler? BatchUpdateCompleted;
+
     public void Load(IEnumerable<TextEntry> entries)
     {
         _suppressPersistence = true;
+        IsBatchUpdating = true;
         try
         {
             Entries.Clear();
@@ -38,10 +43,12 @@ public sealed class EntryListViewModel : ObservableObject
         }
         finally
         {
+            IsBatchUpdating = false;
             _suppressPersistence = false;
         }
 
         OnPropertyChanged(nameof(HasEntries));
+        BatchUpdateCompleted?.Invoke(this, EventArgs.Empty);
     }
 
     public TextEntryViewModel Add(EntryKind kind, string content, string? hotkey, string? label)
@@ -123,6 +130,7 @@ public sealed class EntryListViewModel : ObservableObject
             : EntryListMerger.Merge(existing, imported);
 
         _suppressPersistence = true;
+        IsBatchUpdating = true;
         try
         {
             Entries.Clear();
@@ -133,10 +141,12 @@ public sealed class EntryListViewModel : ObservableObject
         }
         finally
         {
+            IsBatchUpdating = false;
             _suppressPersistence = false;
         }
 
         OnPropertyChanged(nameof(HasEntries));
+        BatchUpdateCompleted?.Invoke(this, EventArgs.Empty);
         await SaveNowAsync(cancellationToken);
 
         return imported.Count;
@@ -157,6 +167,11 @@ public sealed class EntryListViewModel : ObservableObject
 
     private void OnEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        if (IsBatchUpdating)
+        {
+            return;
+        }
+
         OnPropertyChanged(nameof(HasEntries));
         if (!_suppressPersistence)
         {

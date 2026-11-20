@@ -1,11 +1,11 @@
-# 快速輸入 1.5.1
+# 快速輸入 1.5.2
 
 這是一個 Windows 常用文字快速輸入工具，提供 x64 與 arm64 免安裝版本。
 
 ## 下載
 
-- `InputAccelerator-1.5.1-win-x64.zip`：一般 Intel／AMD 電腦。
-- `InputAccelerator-1.5.1-win-arm64.zip`：Windows on Arm 裝置。
+- `InputAccelerator-1.5.2-win-x64.zip`：一般 Intel／AMD 電腦。
+- `InputAccelerator-1.5.2-win-arm64.zip`：Windows on Arm 裝置。
 
 兩者皆為 framework-dependent（非 Self-Contained）版本，解壓縮後直接執行 `InputAccelerator.exe`。本專案不提供安裝檔。
 
@@ -42,9 +42,8 @@
 
 ## 本次更新
 
-- 新增項目清單匯入／匯出功能，匯出檔為 JSON，可作為備份或轉移到其他電腦。
-- 匯入時可選擇附加到現有清單或取代目前清單，並會略過無效項目。
-- 浮動視窗左上角新增「開啟主視窗」按鈕，不必再從系統匣切換。
+- 優化程式啟動速度：減少啟動期初始化與序列化負擔，改為按需建立設定與浮動視窗，主視窗更快顯示。
+- 降低常駐記憶體使用量：關閉設定視窗與常駐縮小後自動釋放未使用的視窗資源與記憶體工作集，並啟用 .NET 節省記憶體模式。
 
 ## 使用提醒
 

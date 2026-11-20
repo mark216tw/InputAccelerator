@@ -1,22 +1,29 @@
+using System.Collections.Concurrent;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace InputAccelerator.Helpers;
 
 internal static class Strings
 {
-    private static readonly ResourceLoader Loader = new();
+    private static readonly Lazy<ResourceLoader> Loader = new(static () => new ResourceLoader());
+    private static readonly ConcurrentDictionary<string, string?> Cache = new(StringComparer.Ordinal);
 
     public static string Get(string key, string fallback = "")
     {
-        try
+        var value = Cache.GetOrAdd(key, static resourceKey =>
         {
-            var value = Loader.GetString(key);
-            return string.IsNullOrEmpty(value) ? fallback : value;
-        }
-        catch (Exception)
-        {
-            return fallback;
-        }
+            try
+            {
+                var loaded = Loader.Value.GetString(resourceKey);
+                return string.IsNullOrEmpty(loaded) ? null : loaded;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        });
+
+        return value ?? fallback;
     }
 
     public static string Format(string key, params object[] arguments)

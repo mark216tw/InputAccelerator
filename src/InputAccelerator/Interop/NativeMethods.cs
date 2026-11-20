@@ -440,6 +440,17 @@ internal static class NativeMethods
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern IntPtr GetModuleHandle(string? moduleName);
 
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetProcessWorkingSetSizeEx(
+        IntPtr processHandle,
+        IntPtr minimumWorkingSetSize,
+        IntPtr maximumWorkingSetSize,
+        uint flags);
+
     [DllImport("comctl32.dll", SetLastError = true)]
     public static extern bool SetWindowSubclass(
         IntPtr hWnd,

@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using InputAccelerator.Core.Models;
 using InputAccelerator.Helpers;
 using InputAccelerator.Interop;
@@ -27,6 +28,8 @@ public sealed partial class FloatingWindow : Window
     private readonly DispatcherQueue _dispatcher;
     private readonly DispatcherQueueTimer _topmostTimer;
     private readonly DispatcherQueueTimer _autoCollapseTimer;
+    private readonly PointerEventHandler _pointerPressedHandler;
+    private readonly PointerEventHandler _pointerActivityHandler;
     private readonly IntPtr _windowHandle;
     private bool _isSending;
     private bool _isDragging;
@@ -52,7 +55,7 @@ public sealed partial class FloatingWindow : Window
         _settings = settings;
         _logger = logger;
         ChipHost.ItemsSource = ViewModel.Items;
-        ViewModel.Items.CollectionChanged += (_, _) => UpdateEmptyState();
+        ViewModel.Items.CollectionChanged += OnItemsCollectionChanged;
         UpdateEmptyState();
         _interop = new FloatingWindowInterop();
 
@@ -86,17 +89,19 @@ public sealed partial class FloatingWindow : Window
         _autoCollapseTimer.IsRepeating = false;
         _autoCollapseTimer.Tick += OnAutoCollapseTimerTick;
 
+        _pointerPressedHandler = new PointerEventHandler(OnRootPointerPressed);
+        _pointerActivityHandler = new PointerEventHandler(OnRootPointerActivity);
         RootGrid.AddHandler(
             UIElement.PointerPressedEvent,
-            new PointerEventHandler(OnRootPointerPressed),
+            _pointerPressedHandler,
             handledEventsToo: true);
         RootGrid.AddHandler(
             UIElement.PointerEnteredEvent,
-            new PointerEventHandler(OnRootPointerActivity),
+            _pointerActivityHandler,
             handledEventsToo: true);
         RootGrid.AddHandler(
             UIElement.PointerMovedEvent,
-            new PointerEventHandler(OnRootPointerActivity),
+            _pointerActivityHandler,
             handledEventsToo: true);
 
         var dragHandleText = Strings.Get("DragHandleText", "拖曳移動視窗");
@@ -119,6 +124,7 @@ public sealed partial class FloatingWindow : Window
         ToolTipService.SetToolTip(CollapsedBlock, restoreText);
         AutomationProperties.SetName(CollapsedBlock, restoreText);
 
+        ApplyAppearance(_appearance.CurrentAppearance);
         _appearance.Changed += OnAppearanceChanged;
         _settings.SettingsSaved += OnSettingsSaved;
         Closed += OnClosed;
@@ -516,16 +522,23 @@ public sealed partial class FloatingWindow : Window
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
+        ViewModel.Items.CollectionChanged -= OnItemsCollectionChanged;
         _appearance.Changed -= OnAppearanceChanged;
         _settings.SettingsSaved -= OnSettingsSaved;
+        Closed -= OnClosed;
         _topmostTimer.Stop();
         _topmostTimer.Tick -= OnTopmostTimerTick;
         _autoCollapseTimer.Stop();
         _autoCollapseTimer.Tick -= OnAutoCollapseTimerTick;
-        RootGrid.RemoveHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnRootPointerPressed));
-        RootGrid.RemoveHandler(UIElement.PointerEnteredEvent, new PointerEventHandler(OnRootPointerActivity));
-        RootGrid.RemoveHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnRootPointerActivity));
+        RootGrid.RemoveHandler(UIElement.PointerPressedEvent, _pointerPressedHandler);
+        RootGrid.RemoveHandler(UIElement.PointerEnteredEvent, _pointerActivityHandler);
+        RootGrid.RemoveHandler(UIElement.PointerMovedEvent, _pointerActivityHandler);
         _interop.Dispose();
+    }
+
+    private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        UpdateEmptyState();
     }
 
     private void UpdateEmptyState()

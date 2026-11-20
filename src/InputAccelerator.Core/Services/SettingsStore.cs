@@ -1,19 +1,10 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using InputAccelerator.Core.Models;
 
 namespace InputAccelerator.Core.Services;
 
 public sealed class SettingsStore
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-    };
-
     private readonly string _filePath;
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
@@ -39,7 +30,10 @@ public sealed class SettingsStore
                 FileShare.Read,
                 bufferSize: 4096,
                 FileOptions.Asynchronous | FileOptions.SequentialScan);
-            var settings = await JsonSerializer.DeserializeAsync<AppSettings>(stream, SerializerOptions, cancellationToken)
+            var settings = await JsonSerializer.DeserializeAsync(
+                    stream,
+                    InputAcceleratorJsonContext.Settings.AppSettings,
+                    cancellationToken)
                 .ConfigureAwait(false);
 
             return Normalize(settings);
@@ -74,7 +68,11 @@ public sealed class SettingsStore
                     bufferSize: 4096,
                     FileOptions.Asynchronous))
                 {
-                    await JsonSerializer.SerializeAsync(stream, settings, SerializerOptions, cancellationToken)
+                    await JsonSerializer.SerializeAsync(
+                            stream,
+                            settings,
+                            InputAcceleratorJsonContext.Settings.AppSettings,
+                            cancellationToken)
                         .ConfigureAwait(false);
                 }
 

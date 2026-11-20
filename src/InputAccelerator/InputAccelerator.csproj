@@ -19,8 +19,13 @@
     <DefaultLanguage>zh-Hant</DefaultLanguage>
     <AppxDefaultResourceQualifiers>Language=zh-Hant</AppxDefaultResourceQualifiers>
     <PublishTrimmed>false</PublishTrimmed>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />

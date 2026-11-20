@@ -34,6 +34,7 @@ public sealed partial class MainViewModel : ObservableObject
         _settings = settings;
         _logger = logger;
         _entryList.Entries.CollectionChanged += OnEntriesCollectionChanged;
+        _entryList.BatchUpdateCompleted += OnEntriesBatchUpdateCompleted;
 
         var assembly = Assembly.GetExecutingAssembly();
         var informational = assembly
@@ -140,6 +141,16 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_entryList.IsBatchUpdating)
+        {
+            return;
+        }
+
+        NotifySelectionStateChanged();
+    }
+
+    private void OnEntriesBatchUpdateCompleted(object? sender, EventArgs e)
     {
         NotifySelectionStateChanged();
     }

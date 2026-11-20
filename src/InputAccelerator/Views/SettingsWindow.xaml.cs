@@ -15,9 +15,9 @@ public sealed partial class SettingsWindow : Window
     private const int DefaultHeightDip = 580;
 
     private readonly AppearanceService _appearance;
+    private bool _allowClose;
     private bool _isClosing;
     private bool _isSaving;
-    private bool _needsReload = true;
 
     public SettingsWindow(SettingsViewModel viewModel, AppearanceService appearance)
     {
@@ -41,26 +41,23 @@ public sealed partial class SettingsWindow : Window
         RootGrid.RequestedTheme = _appearance.CurrentElementTheme;
         _appearance.Changed += OnAppearanceChanged;
         AppWindow.Closing += OnClosing;
+        Closed += OnClosed;
     }
 
     public SettingsViewModel ViewModel { get; }
 
     public void ShowSettings(Window owner)
     {
-        if (_needsReload)
-        {
-            ViewModel.Reload();
-            _needsReload = false;
-        }
-
+        ViewModel.Reload();
         ConfigureWindowGeometry(owner);
         AppWindow.Show(activateWindow: true);
         Activate();
     }
 
-    public void HideSettings()
+    public void ForceClose()
     {
-        AppWindow.Hide();
+        _allowClose = true;
+        Close();
     }
 
     private void OnAppearanceChanged(object? sender, AppearanceChangedEventArgs e)
@@ -70,8 +67,21 @@ public sealed partial class SettingsWindow : Window
 
     private void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
+        if (_allowClose)
+        {
+            return;
+        }
+
         args.Cancel = true;
         _ = CloseSettingsAsync();
+    }
+
+    private void OnClosed(object sender, WindowEventArgs args)
+    {
+        _appearance.Changed -= OnAppearanceChanged;
+        AppWindow.Closing -= OnClosing;
+        Closed -= OnClosed;
+        Bindings.StopTracking();
     }
 
     private async void OnSaveClick(object sender, RoutedEventArgs e)
@@ -86,8 +96,8 @@ public sealed partial class SettingsWindow : Window
         {
             if (await ViewModel.SaveAsync())
             {
-                _needsReload = true;
-                HideSettings();
+                _allowClose = true;
+                Close();
             }
             else
             {
@@ -120,8 +130,8 @@ public sealed partial class SettingsWindow : Window
                 return;
             }
 
-            _needsReload = true;
-            HideSettings();
+            _allowClose = true;
+            Close();
         }
         finally
         {

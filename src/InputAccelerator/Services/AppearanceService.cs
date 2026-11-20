@@ -16,6 +16,7 @@ public sealed class AppearanceService : IDisposable
     private readonly ILogger<AppearanceService> _logger;
     private AppTheme _theme = AppTheme.System;
     private int _backgroundIndex = FloatingBackgroundPresets.FollowSystemIndex;
+    private AppearanceChangedEventArgs? _currentAppearance;
     private bool _disposed;
 
     public AppearanceService(ILogger<AppearanceService> logger)
@@ -33,6 +34,22 @@ public sealed class AppearanceService : IDisposable
     public int BackgroundIndex => _backgroundIndex;
 
     public ElementTheme CurrentElementTheme => ResolveElementTheme(_theme, IsSystemDark());
+
+    public AppearanceChangedEventArgs CurrentAppearance
+    {
+        get
+        {
+            if (_currentAppearance is null)
+            {
+                var elementTheme = ResolveElementTheme(_theme, IsSystemDark());
+                _currentAppearance = new AppearanceChangedEventArgs(
+                    elementTheme,
+                    CreatePalette(elementTheme, _backgroundIndex));
+            }
+
+            return _currentAppearance;
+        }
+    }
 
     public void Apply(AppTheme theme, int backgroundIndex)
     {
@@ -70,7 +87,9 @@ public sealed class AppearanceService : IDisposable
     {
         var elementTheme = ResolveElementTheme(_theme, IsSystemDark());
         var palette = CreatePalette(elementTheme, _backgroundIndex);
-        Changed?.Invoke(this, new AppearanceChangedEventArgs(elementTheme, palette));
+        var args = new AppearanceChangedEventArgs(elementTheme, palette);
+        _currentAppearance = args;
+        Changed?.Invoke(this, args);
     }
 
     private bool IsSystemDark()

@@ -36,8 +36,10 @@ public partial class App : Application
         {
             AppPaths.EnsureDataDirectory();
 
-            var builder = Host.CreateApplicationBuilder();
-            builder.Logging.ClearProviders();
+            var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings
+            {
+                DisableDefaults = true,
+            });
             builder.Logging.SetMinimumLevel(LogLevel.Information);
             builder.Logging.AddProvider(new FileLoggerProvider(AppPaths.LogFile));
 
@@ -46,15 +48,18 @@ public partial class App : Application
             builder.Services.AddSingleton(new SettingsStore(AppPaths.SettingsFile));
             builder.Services.AddSingleton<SettingsService>();
             builder.Services.AddSingleton<AppearanceService>();
+            builder.Services.AddSingleton<MemoryTrimService>();
             builder.Services.AddSingleton<EntryListViewModel>();
             builder.Services.AddSingleton<MainViewModel>();
-            builder.Services.AddSingleton<SettingsViewModel>();
+            builder.Services.AddTransient<SettingsViewModel>();
             builder.Services.AddSingleton<FloatingBarViewModel>();
             builder.Services.AddSingleton<ForegroundWindowTracker>();
             builder.Services.AddSingleton<InputInjectionService>();
             builder.Services.AddSingleton<TrayIconService>();
-            builder.Services.AddSingleton<SettingsWindow>();
-            builder.Services.AddSingleton<MainWindow>();
+            builder.Services.AddTransient<SettingsWindow>();
+            builder.Services.AddSingleton<Func<SettingsWindow>>(
+                static provider => () => provider.GetRequiredService<SettingsWindow>());
+            builder.Services.AddTransient<MainWindow>();
             builder.Services.AddSingleton<FloatingWindow>();
             builder.Services.AddSingleton<FloatingWindowPlacementManager>();
             builder.Services.AddSingleton<AppCoordinator>();
@@ -68,6 +73,8 @@ public partial class App : Application
         catch (Exception ex)
         {
             LogFatal(ex);
+            _host?.Dispose();
+            _host = null;
             _singleInstance?.Dispose();
             _singleInstance = null;
             Exit();

@@ -27,6 +27,7 @@ public sealed class FloatingBarViewModel : ObservableObject
         _logger = logger;
         _entryList.PropertyChanged += OnEntryListPropertyChanged;
         _entryList.Entries.CollectionChanged += OnEntriesCollectionChanged;
+        _entryList.BatchUpdateCompleted += OnEntriesBatchUpdateCompleted;
         RebuildItems();
     }
 
@@ -74,9 +75,60 @@ public sealed class FloatingBarViewModel : ObservableObject
         }
     }
 
-    private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnEntriesBatchUpdateCompleted(object? sender, EventArgs e)
     {
         RebuildItems();
+    }
+
+    private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_entryList.IsBatchUpdating)
+        {
+            return;
+        }
+
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add when e.NewItems is not null && e.NewStartingIndex >= 0:
+                var insertIndex = e.NewStartingIndex;
+                foreach (TextEntryViewModel entry in e.NewItems)
+                {
+                    var item = CreateItem(entry);
+                    Items.Insert(insertIndex++, item);
+                }
+
+                OnPropertyChanged(nameof(HasEntries));
+                return;
+
+            case NotifyCollectionChangedAction.Remove when e.OldItems is not null && e.OldStartingIndex >= 0:
+                for (var i = 0; i < e.OldItems.Count && e.OldStartingIndex < Items.Count; i++)
+                {
+                    Items[e.OldStartingIndex].Dispose();
+                    Items.RemoveAt(e.OldStartingIndex);
+                }
+
+                OnPropertyChanged(nameof(HasEntries));
+                return;
+
+            case NotifyCollectionChangedAction.Move when e.OldStartingIndex >= 0 && e.NewStartingIndex >= 0 && e.OldItems?.Count == 1:
+                Items.Move(e.OldStartingIndex, e.NewStartingIndex);
+                return;
+
+            default:
+                RebuildItems();
+                return;
+        }
+    }
+
+    private FloatingEntryItemViewModel CreateItem(TextEntryViewModel entry)
+    {
+        var item = new FloatingEntryItemViewModel(entry);
+        if (_palette is { } palette)
+        {
+            item.ApplyPalette(palette);
+        }
+
+        return item;
     }
 
     private void RebuildItems()
@@ -89,13 +141,7 @@ public sealed class FloatingBarViewModel : ObservableObject
         Items.Clear();
         foreach (var entry in _entryList.Entries)
         {
-            var item = new FloatingEntryItemViewModel(entry);
-            if (_palette is { } palette)
-            {
-                item.ApplyPalette(palette);
-            }
-
-            Items.Add(item);
+            Items.Add(CreateItem(entry));
         }
 
         OnPropertyChanged(nameof(HasEntries));

@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-11-20 - v1.5.2
+
+### 目標
+提高應用程式啟動速度，並降低系統匣／浮動視窗常駐時的電腦記憶體使用量。
+
+### 變更
+- `App.xaml.cs`：改用 `Host.CreateEmptyApplicationBuilder(DisableDefaults = true)` 跳過未使用的設定檔監控、環境變數掃描與預設記錄器初始化；將 `MainWindow`、`SettingsWindow`、`SettingsViewModel` 改為按需建立（Transient），`FloatingWindow` 與相關注入服務延遲至需要時建立。
+- `Services/AppCoordinator.cs`：
+  - 啟動時以 `Task.WhenAll` 平行讀取 `settings.json` 與 `entries.json`。
+  - 先顯示主視窗，若啟用浮動視窗則以低優先權排程至 `DispatcherQueue` 延後建立，縮短首次畫面出現時間。
+  - 關閉主視窗進入常駐時，若浮動視窗已建立則真正關閉並釋放主視窗（含視覺樹與 DXGI 交換鏈），再次開啟時按需重建；若浮動視窗未建立則維持隱藏以避免 WinUI 3 結束訊息迴圈。
+- `Views/SettingsWindow.xaml.cs`、`MainWindow.xaml.cs`：設定視窗改為點擊時才建立、關閉／儲存時真正銷毀並停止 `x:Bind` 追蹤與事件訂閱，不再常駐於記憶體。
+- `Services/MemoryTrimService.cs`、`Interop/NativeMethods.cs`：新增常駐記憶體整理服務，在主視窗關閉／隱藏、設定視窗關閉、浮動視窗隱藏或縮小時延遲執行 GC 壓縮與 `SetProcessWorkingSetSizeEx` 工作集縮減。
+- `InputAccelerator.csproj`：啟用 `System.GC.ConserveMemory = 9` 與明確設定 `ServerGarbageCollection = false`，降低常駐託管堆積與記憶體碎片。
+- `InputAccelerator.Core/Services/InputAcceleratorJsonContext.cs`、`EntryRepository.cs`、`SettingsStore.cs`：改用 `System.Text.Json` Source Generation 消除啟動期反射與動態程式碼產生。
+- `ViewModels/EntryListViewModel.cs`、`FloatingBarViewModel.cs`、`MainViewModel.cs`：加入批次更新狀態，消除啟動載入與匯入時的 $O(N^2)$ 浮動視窗項目重建；單筆新增／刪除／移動改為增量更新。
+- `Helpers/Strings.cs`：快取 `ResourceLoader` 字串查詢並延遲初始化，減少重複 WinRT COM 呼叫。
+- `Services/AppearanceService.cs`、`Views/FloatingWindow.xaml.cs`：新增 `CurrentAppearance` 供延遲建立的浮動視窗套用目前外觀；修正 `FloatingWindow.OnClosed` 指標事件取消註冊。
+- 版本資訊同步更新至 1.5.2。
+
+### 問題與解法
+- WinUI 3 關閉最後一個開啟的 `Window` 會直接結束應用程式訊息迴圈 → 在 `AppCoordinator.OnMainWindowClosing` 判斷 `_floatingWindow` 是否已建立：有浮動視窗時才真正關閉主視窗釋放資源，否則隱藏主視窗並觸發記憶體整理。
+- `System.Text.Json` Source Generation 預設列舉序列化為 PascalCase，而既有設定檔與測試預期 camelCase → 在 `InputAcceleratorJsonContext` 以具型別 `JsonStringEnumConverter<T>(JsonNamingPolicy.CamelCase)` 設定專屬 options，兼顧無反射與相容性。
+
+### 待辦
+- 尚未於實機互動視窗環境量測優化前後的冷啟動毫秒數與常駐工作集（Working Set）數據，建議於本機以工作管理員實測。
+
 ## 2026-11-14 - v1.5.1
 
 ### 目標
