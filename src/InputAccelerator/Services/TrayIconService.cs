@@ -41,7 +41,10 @@ public sealed class TrayIconService : IDisposable
             return;
         }
 
-        _messageWindow = new MessageWindow(HandleMessage, "InputAccelerator.Tray");
+        _messageWindow = new MessageWindow(
+            HandleMessage,
+            "InputAccelerator.Tray",
+            Strings.Get("AppName", "快速輸入"));
         _taskbarCreatedMessage = NativeMethods.RegisterWindowMessage("TaskbarCreated");
         _iconHandle = LoadTrayIcon();
         AddIcon();
@@ -202,7 +205,7 @@ public sealed class TrayIconService : IDisposable
         }
 
         var data = CreateIconData();
-        data.Flags = NativeMethods.NifMessage | NativeMethods.NifIcon | NativeMethods.NifTip;
+        data.Flags = NativeMethods.NifMessage | NativeMethods.NifIcon | NativeMethods.NifTip | NativeMethods.NifShowTip;
         if (!NativeMethods.Shell_NotifyIcon(NativeMethods.NimAdd, ref data))
         {
             _logger.LogWarning("無法加入系統匣圖示。");

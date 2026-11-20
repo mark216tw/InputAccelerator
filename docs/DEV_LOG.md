@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-20 - v1.5.3
+
+### 目標
+修正系統匣圖示 tooltip 的應用程式名稱為空白，並讓縮小後的浮動視窗在滑鼠移入時自動展開。
+
+### 變更
+- `Interop/NativeMethods.cs`：新增 `NifShowTip`（0x80）。
+- `Services/TrayIconService.cs`：加入圖示時 `uFlags` 增加 `NifShowTip`；`MessageWindow` 建立時帶入應用程式名稱作為視窗標題。
+- `Interop/MessageWindow.cs`：建構子新增可選 `windowTitle`，`CreateWindowEx` 不再固定使用空字串標題。
+- `Views/FloatingWindow.xaml.cs`：縮小狀態下收到 `PointerEntered`／`PointerMoved` 時自動還原；縮小時若游標仍位於縮小區塊內，先抑制自動展開，直到游標離開後再允許。
+- `Directory.Build.props`：版本提升至 1.5.3，並補上 `AssemblyTitle`（檔案描述）與 `Description`，讓系統顯示的名稱一致。
+- `CHANGELOG.md`、`RELEASE_NOTES.md`：同步更新。
+
+### 問題與解法
+- `NOTIFYICON_VERSION_4` 會抑制標準 tooltip，未指定 `NIF_SHOWTIP` 時 `szTip` 不會顯示；Windows 11 顯示的備援名稱又取自圖示擁有視窗標題，而該訊息視窗標題原本是空字串，因此看起來完全空白 → 同時補上 `NIF_SHOWTIP` 與視窗標題。
+- 縮小後視窗會移動到游標下方，若直接依游標位置展開會造成「一縮小就立刻展開」→ 縮小當下偵測游標是否在縮小區塊內，若是則暫時抑制，待 `PointerExited` 後恢復。
+
+### 待辦
+- 需在實機確認系統匣 tooltip 與縮小後滑鼠移入自動展開的行為。
+
+---
+
 ## 2026-11-20 - v1.5.2
 
 ### 目標

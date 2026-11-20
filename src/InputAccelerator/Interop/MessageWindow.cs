@@ -10,7 +10,10 @@ internal sealed class MessageWindow : IDisposable
     private readonly string _className;
     private bool _disposed;
 
-    public MessageWindow(Func<IntPtr, uint, IntPtr, IntPtr, IntPtr> messageHandler, string namePrefix)
+    public MessageWindow(
+        Func<IntPtr, uint, IntPtr, IntPtr, IntPtr> messageHandler,
+        string namePrefix,
+        string? windowTitle = null)
     {
         ArgumentNullException.ThrowIfNull(messageHandler);
         _messageHandler = messageHandler;
@@ -34,7 +37,7 @@ internal sealed class MessageWindow : IDisposable
         Handle = NativeMethods.CreateWindowEx(
             extendedStyle: 0,
             className: _className,
-            windowName: string.Empty,
+            windowName: windowTitle ?? string.Empty,
             style: 0,
             x: 0,
             y: 0,

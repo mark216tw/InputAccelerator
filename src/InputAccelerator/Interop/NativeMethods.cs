@@ -96,6 +96,8 @@ internal static class NativeMethods
 
     public const uint NifInfo = 0x00000010;
 
+    public const uint NifShowTip = 0x00000080;
+
     public const uint NotifyIconVersion4 = 4;
 
     public const uint NiifInfo = 0x00000001;

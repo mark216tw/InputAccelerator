@@ -30,11 +30,13 @@ public sealed partial class FloatingWindow : Window
     private readonly DispatcherQueueTimer _autoCollapseTimer;
     private readonly PointerEventHandler _pointerPressedHandler;
     private readonly PointerEventHandler _pointerActivityHandler;
+    private readonly PointerEventHandler _pointerExitedHandler;
     private readonly IntPtr _windowHandle;
     private bool _isSending;
     private bool _isDragging;
     private bool _isResizing;
     private bool _isVisible;
+    private bool _suppressHoverExpand;
     private long _lastActivityTimestamp;
     private WindowPlacement? _expandedPlacement;
     private NativeMethods.Point _dragStartCursor;
@@ -91,6 +93,7 @@ public sealed partial class FloatingWindow : Window
 
         _pointerPressedHandler = new PointerEventHandler(OnRootPointerPressed);
         _pointerActivityHandler = new PointerEventHandler(OnRootPointerActivity);
+        _pointerExitedHandler = new PointerEventHandler(OnRootPointerExited);
         RootGrid.AddHandler(
             UIElement.PointerPressedEvent,
             _pointerPressedHandler,
@@ -102,6 +105,10 @@ public sealed partial class FloatingWindow : Window
         RootGrid.AddHandler(
             UIElement.PointerMovedEvent,
             _pointerActivityHandler,
+            handledEventsToo: true);
+        RootGrid.AddHandler(
+            UIElement.PointerExitedEvent,
+            _pointerExitedHandler,
             handledEventsToo: true);
 
         var dragHandleText = Strings.Get("DragHandleText", "拖曳移動視窗");
@@ -345,17 +352,24 @@ public sealed partial class FloatingWindow : Window
         var y = _expandedPlacement.Y;
 
         AppWindow.MoveAndResize(new RectInt32(x, y, collapsedSize, collapsedSize));
+        _suppressHoverExpand = IsCursorInside(x, y, collapsedSize, collapsedSize);
         _interop.EnsureTopmost();
         UpdateCollapsedVisualState();
     }
 
     private void OnRestoreClick(object sender, RoutedEventArgs e)
     {
+        Restore();
+    }
+
+    private void Restore()
+    {
         if (!IsCollapsed)
         {
             return;
         }
 
+        _suppressHoverExpand = false;
         IsCollapsed = false;
         _interop.SetCollapsed(false);
         if (AppWindow.Presenter is OverlappedPresenter presenter)
@@ -517,7 +531,31 @@ public sealed partial class FloatingWindow : Window
 
     private void OnRootPointerActivity(object sender, PointerRoutedEventArgs e)
     {
+        if (IsCollapsed)
+        {
+            if (!_suppressHoverExpand)
+            {
+                Restore();
+            }
+
+            return;
+        }
+
         MarkActivity();
+    }
+
+    private void OnRootPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _suppressHoverExpand = false;
+    }
+
+    private static bool IsCursorInside(int x, int y, int width, int height)
+    {
+        return NativeMethods.GetCursorPos(out var cursor) &&
+            cursor.X >= x &&
+            cursor.X < x + width &&
+            cursor.Y >= y &&
+            cursor.Y < y + height;
     }
 
     private void OnClosed(object sender, WindowEventArgs args)
@@ -533,6 +571,7 @@ public sealed partial class FloatingWindow : Window
         RootGrid.RemoveHandler(UIElement.PointerPressedEvent, _pointerPressedHandler);
         RootGrid.RemoveHandler(UIElement.PointerEnteredEvent, _pointerActivityHandler);
         RootGrid.RemoveHandler(UIElement.PointerMovedEvent, _pointerActivityHandler);
+        RootGrid.RemoveHandler(UIElement.PointerExitedEvent, _pointerExitedHandler);
         _interop.Dispose();
     }
 
