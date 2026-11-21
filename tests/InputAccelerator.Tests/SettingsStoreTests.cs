@@ -28,7 +28,7 @@ public sealed class SettingsStoreTests : IDisposable
             InputMode = InputMode.ClipboardPaste,
             Theme = AppTheme.Dark,
             FloatingBackgroundIndex = 5,
-            FloatingAutoCollapseSeconds = 120,
+            FloatingAutoCollapseSeconds = 60,
             FloatingWindowPlacement = new WindowPlacement { X = 100, Y = 200, Width = 240, Height = 360 },
             MainWindowPlacement = new WindowPlacement { X = 60, Y = 80, Width = 900, Height = 700 },
             MainWindowMaximized = true,
@@ -42,7 +42,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(InputMode.ClipboardPaste, loaded.InputMode);
         Assert.Equal(AppTheme.Dark, loaded.Theme);
         Assert.Equal(5, loaded.FloatingBackgroundIndex);
-        Assert.Equal(120, loaded.FloatingAutoCollapseSeconds);
+        Assert.Equal(60, loaded.FloatingAutoCollapseSeconds);
         Assert.NotNull(loaded.FloatingWindowPlacement);
         Assert.Equal(100, loaded.FloatingWindowPlacement!.X);
         Assert.Equal(360, loaded.FloatingWindowPlacement.Height);
@@ -114,17 +114,21 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(FloatingAutoCollapsePresets.DefaultSeconds, loaded.FloatingAutoCollapseSeconds);
     }
 
-    [Fact]
-    public async Task Load_WhenAutoCollapseInvalid_NormalizesToDefault()
+    [Theory]
+    [InlineData(120)]
+    [InlineData(180)]
+    [InlineData(300)]
+    [InlineData(999)]
+    public async Task Load_WhenAutoCollapseInvalid_NormalizesToDefault(int seconds)
     {
         var path = Path.Combine(_directory, "settings.json");
         await File.WriteAllTextAsync(
             path,
-            """
+            $$"""
             {
               "isOverlayEnabled": true,
               "inputMode": "simulatedInput",
-              "floatingAutoCollapseSeconds": 999
+              "floatingAutoCollapseSeconds": {{seconds}}
             }
             """);
         var store = new SettingsStore(path);

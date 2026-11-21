@@ -58,9 +58,9 @@ UI、Win32 interop、系統匣與輸入注入仍需手動驗收，清單見 [系
 版本集中於 `Directory.Build.props`：
 
 ```xml
-<Version>1.6.0</Version>
+<Version>1.6.2</Version>
 <AssemblyVersion>1.6.0.0</AssemblyVersion>
-<FileVersion>1.6.0.0</FileVersion>
+<FileVersion>1.6.2.0</FileVersion>
 ```
 
 規則：
@@ -119,7 +119,7 @@ Assets/AppIcon.ico
 建議讓 zip 解壓縮後包含單一資料夾，避免檔案散落。
 
 ```powershell
-$version = "1.6.0"
+$version = "1.6.2"
 
 New-Item -ItemType Directory -Force -Path "artifacts/stage/win-x64" | Out-Null
 New-Item -ItemType Directory -Force -Path "artifacts/stage/win-arm64" | Out-Null
@@ -146,8 +146,8 @@ Compress-Archive `
 輸出：
 
 ```text
-artifacts/InputAccelerator-1.6.0-win-x64.zip
-artifacts/InputAccelerator-1.6.0-win-arm64.zip
+artifacts/InputAccelerator-1.6.2-win-x64.zip
+artifacts/InputAccelerator-1.6.2-win-arm64.zip
 ```
 
 `artifacts/` 與 `publish/` 已在 `.gitignore` 中排除，不會進入版本控制。
@@ -171,10 +171,10 @@ git log --oneline -5
 ### 7.2 建立 Release
 
 ```powershell
-gh release create v1.6.0 `
-  "artifacts/InputAccelerator-1.6.0-win-x64.zip" `
-  "artifacts/InputAccelerator-1.6.0-win-arm64.zip" `
-  --title "快速輸入 1.6.0" `
+gh release create v1.6.2 `
+  "artifacts/InputAccelerator-1.6.2-win-x64.zip" `
+  "artifacts/InputAccelerator-1.6.2-win-arm64.zip" `
+  --title "快速輸入 1.6.2" `
   --notes-file RELEASE_NOTES.md
 ```
 
@@ -229,3 +229,4 @@ gh release create v1.6.0 `
 ### zip 太大
 
 本專案發佈為 framework-dependent，若仍偏大，請確認沒有誤帶 `--self-contained true` 或 `WindowsAppSDKSelfContained=true`。
+

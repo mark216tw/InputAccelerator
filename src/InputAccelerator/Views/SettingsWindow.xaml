@@ -116,13 +116,12 @@
                             HorizontalAlignment="Left"
                             SelectedIndex="{x:Bind ViewModel.FloatingAutoCollapseIndex, Mode=TwoWay}">
                             <ComboBoxItem x:Uid="FloatingAutoCollapseOff" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse3Seconds" />
+                            <ComboBoxItem x:Uid="FloatingAutoCollapse5Seconds" />
                             <ComboBoxItem x:Uid="FloatingAutoCollapse10Seconds" />
                             <ComboBoxItem x:Uid="FloatingAutoCollapse20Seconds" />
                             <ComboBoxItem x:Uid="FloatingAutoCollapse30Seconds" />
                             <ComboBoxItem x:Uid="FloatingAutoCollapse1Minute" />
-                            <ComboBoxItem x:Uid="FloatingAutoCollapse2Minutes" />
-                            <ComboBoxItem x:Uid="FloatingAutoCollapse3Minutes" />
-                            <ComboBoxItem x:Uid="FloatingAutoCollapse5Minutes" />
                         </ComboBox>
                         <TextBlock x:Uid="FloatingAutoCollapseHint" Style="{StaticResource HintTextStyle}" />
                     </StackPanel>

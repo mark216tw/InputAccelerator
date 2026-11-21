@@ -6,7 +6,7 @@ public static class FloatingAutoCollapsePresets
     public const int DefaultSeconds = OffSeconds;
     public const int DefaultIndex = 0;
 
-    public static IReadOnlyList<int> AllowedSeconds { get; } = [0, 10, 20, 30, 60, 120, 180, 300];
+    public static IReadOnlyList<int> AllowedSeconds { get; } = [0, 3, 5, 10, 20, 30, 60];
 
     public static bool IsValidSeconds(int seconds)
     {

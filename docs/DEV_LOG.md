@@ -4,6 +4,48 @@
 
 ---
 
+## 2026-11-21 - v1.6.2
+
+### 目標
+重新設計以中文字「字」為主題的 App 圖示，提升視覺質感並修正筆畫交錯鏤空問題。
+
+### 變更
+- `tools/GenerateIcon.ps1`：
+  - 修正 `GraphicsPath` 未指定 `FillMode.Winding` 導致「字」字形重疊筆畫交錯處出現鏤空的缺陷。
+  - 改以 `Noto Sans TC` Bold（避免對 `Black` 字體再套用 faux-bold）、4x/2x 超取樣縮圖與立體 Fluent 鍵帽雙層漸層設計（32px 以上呈現鍵帽立體面與頂緣高光，16／24px 精簡外框並放大字形保持小尺寸清晰度）。
+  - 重新產生 `src/InputAccelerator/Assets/AppIcon-{16,24,32,48,64,128,256}.png` 與 `AppIcon.ico`。
+- `Directory.Build.props`、`CHANGELOG.md`、`RELEASE_NOTES.md`：版本提升至 1.6.2。
+
+### 問題與解法
+- 原版使用 `GraphicsPath` 預設 `FillMode.Alternate`（even-odd），TrueType 字形重疊輪廓在筆畫交叉點會互相抵消變透明 → 改用 `FillMode.Winding`。
+- 外框筆畫畫在裁切邊緣外易產生半透明暗邊 → 改於 `SetClip($tilePath)` 內繪製內側高光邊框，確保淺色／深色工作列皆無灰邊。
+
+### 待辦
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+---
+
+## 2026-11-21 - v1.6.1
+
+### 目標
+調整浮動視窗自動縮小選項，並修正 App 圖示內「字」圖案未置中的問題。
+
+### 變更
+- `FloatingAutoCollapsePreset`：允許秒數改為 0、3、5、10、20、30、60；預設仍為 0（不自動縮小）。
+- `SettingsWindow.xaml`／`Resources.resw`：選單改為不自動縮小、3 秒、5 秒、10 秒、20 秒、30 秒、1 分鐘，移除 2／3／5 分鐘。
+- `SettingsStore`：舊版 120／180／300 秒視為無效值，載入時重設為不自動縮小。
+- `tools/GenerateIcon.ps1`：改用 `GraphicsPath` 取得「字」實際墨跡邊界並置中，重新產生多尺寸 PNG 與 `AppIcon.ico`。
+- 更新 `FloatingAutoCollapsePresetsTests`、`SettingsStoreTests`；版本提升至 1.6.1。
+
+### 問題與解法
+- 圖示原以 `DrawString` 依字型行高度置中，實際墨跡中心與畫布中心有 1～2px 偏差；改以 `GraphicsPath.GetBounds()` 計算墨跡中心後平移填滿。
+- 縮短選項後，舊設定可能為 120／180／300 秒；依需求將這些值正規化為 0，避免自動縮小時間與新選單不一致。
+
+### 待辦
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+---
+
 ## 2026-11-21 - v1.6.0
 
 ### 目標

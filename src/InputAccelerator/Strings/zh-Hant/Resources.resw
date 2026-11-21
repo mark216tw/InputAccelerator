@@ -155,6 +155,12 @@
   <data name="FloatingAutoCollapseOff.Content" xml:space="preserve">
     <value>不自動縮小</value>
   </data>
+  <data name="FloatingAutoCollapse3Seconds.Content" xml:space="preserve">
+    <value>3 秒</value>
+  </data>
+  <data name="FloatingAutoCollapse5Seconds.Content" xml:space="preserve">
+    <value>5 秒</value>
+  </data>
   <data name="FloatingAutoCollapse10Seconds.Content" xml:space="preserve">
     <value>10 秒</value>
   </data>
@@ -166,15 +172,6 @@
   </data>
   <data name="FloatingAutoCollapse1Minute.Content" xml:space="preserve">
     <value>1 分鐘</value>
-  </data>
-  <data name="FloatingAutoCollapse2Minutes.Content" xml:space="preserve">
-    <value>2 分鐘</value>
-  </data>
-  <data name="FloatingAutoCollapse3Minutes.Content" xml:space="preserve">
-    <value>3 分鐘</value>
-  </data>
-  <data name="FloatingAutoCollapse5Minutes.Content" xml:space="preserve">
-    <value>5 分鐘</value>
   </data>
   <data name="FloatingAutoExpandToggle.Header" xml:space="preserve">
     <value>浮動視窗自動展開</value>
