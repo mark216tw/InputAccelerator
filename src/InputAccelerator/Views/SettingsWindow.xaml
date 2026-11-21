@@ -87,6 +87,27 @@
                         <TextBlock x:Uid="FloatingBackgroundHint" Style="{StaticResource HintTextStyle}" />
                     </StackPanel>
 
+                    <ToggleSwitch
+                        x:Uid="OverlayToggle"
+                        IsOn="{x:Bind ViewModel.IsOverlayEnabled, Mode=TwoWay}" />
+
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Uid="InputModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Uid="InputModeCombo"
+                            MinWidth="180"
+                            HorizontalAlignment="Left"
+                            SelectedIndex="{x:Bind ViewModel.InputModeIndex, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="InputModeSimulated" />
+                            <ComboBoxItem x:Uid="InputModeClipboard" />
+                        </ComboBox>
+                        <TextBlock x:Uid="InputModeHint" Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+
+                    <ToggleSwitch
+                        x:Uid="AutoEnterToggle"
+                        IsOn="{x:Bind ViewModel.AutoEnterAfterSelection, Mode=TwoWay}" />
+
                     <StackPanel Spacing="6">
                         <TextBlock x:Uid="FloatingAutoCollapseLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
                         <ComboBox
@@ -107,16 +128,10 @@
                     </StackPanel>
 
                     <StackPanel Spacing="6">
-                        <TextBlock x:Uid="InputModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <ComboBox
-                            x:Uid="InputModeCombo"
-                            MinWidth="180"
-                            HorizontalAlignment="Left"
-                            SelectedIndex="{x:Bind ViewModel.InputModeIndex, Mode=TwoWay}">
-                            <ComboBoxItem x:Uid="InputModeSimulated" />
-                            <ComboBoxItem x:Uid="InputModeClipboard" />
-                        </ComboBox>
-                        <TextBlock x:Uid="InputModeHint" Style="{StaticResource HintTextStyle}" />
+                        <ToggleSwitch
+                            x:Uid="FloatingAutoExpandToggle"
+                            IsOn="{x:Bind ViewModel.FloatingAutoExpandEnabled, Mode=TwoWay}" />
+                        <TextBlock x:Uid="FloatingAutoExpandHint" Style="{StaticResource HintTextStyle}" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>

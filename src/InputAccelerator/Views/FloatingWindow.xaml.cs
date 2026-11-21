@@ -145,6 +145,8 @@ public sealed partial class FloatingWindow : Window
 
     public IntPtr WindowHandle => _windowHandle;
 
+    public bool IsBarVisible => _isVisible;
+
     public bool IsCollapsed { get; private set; }
 
     public void ApplyPlacement(WindowPlacement placement)
@@ -533,7 +535,7 @@ public sealed partial class FloatingWindow : Window
     {
         if (IsCollapsed)
         {
-            if (!_suppressHoverExpand)
+            if (!_suppressHoverExpand && _settings.Current.FloatingAutoExpandEnabled)
             {
                 Restore();
             }

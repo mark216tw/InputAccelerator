@@ -176,6 +176,18 @@
   <data name="FloatingAutoCollapse5Minutes.Content" xml:space="preserve">
     <value>5 分鐘</value>
   </data>
+  <data name="FloatingAutoExpandToggle.Header" xml:space="preserve">
+    <value>浮動視窗自動展開</value>
+  </data>
+  <data name="FloatingAutoExpandToggle.OnContent" xml:space="preserve">
+    <value>開</value>
+  </data>
+  <data name="FloatingAutoExpandToggle.OffContent" xml:space="preserve">
+    <value>關</value>
+  </data>
+  <data name="FloatingAutoExpandHint.Text" xml:space="preserve">
+    <value>滑鼠移入縮小後的浮動視窗時會自動展開；關閉後需點擊小區塊才能展開。</value>
+  </data>
   <data name="DisplayModeLabel.Text" xml:space="preserve">
     <value>顯示模式</value>
   </data>

@@ -28,6 +28,7 @@ public sealed class AppCoordinator
     private InputInjectionService? _injectionService;
     private bool _initialized;
     private bool _isExiting;
+    private bool _lastOverlayEnabled;
 
     public AppCoordinator(
         IServiceProvider serviceProvider,
@@ -65,22 +66,22 @@ public sealed class AppCoordinator
         await Task.WhenAll(settingsTask, entriesTask);
 
         _entryList.Load(entriesTask.Result);
-        _mainViewModel.LoadFromSettings(_settings.Current);
         _appearance.Apply(_settings.Current.Theme, _settings.Current.FloatingBackgroundIndex);
+        _lastOverlayEnabled = _settings.Current.IsOverlayEnabled;
 
-        _mainViewModel.OverlayVisibilityChanged += OnOverlayVisibilityChanged;
+        _settings.SettingsSaved += OnSettingsSaved;
         _singleInstance.ActivationRequested += OnActivationRequested;
 
         _tray.ShowManagerRequested += OnShowManagerRequested;
         _tray.ToggleOverlayRequested += OnToggleOverlayRequested;
         _tray.ExitRequested += OnExitRequested;
         _tray.Initialize();
-        _tray.SetOverlayState(_mainViewModel.IsOverlayEnabled);
+        _tray.SetOverlayState(_settings.Current.IsOverlayEnabled);
 
         _mainViewModel.SelectedEntry = _entryList.Entries.FirstOrDefault();
         ShowMainWindow();
 
-        if (_mainViewModel.IsOverlayEnabled)
+        if (_settings.Current.IsOverlayEnabled)
         {
             var dispatcher = DispatcherQueue.GetForCurrentThread();
             if (dispatcher is not null)
@@ -99,7 +100,7 @@ public sealed class AppCoordinator
 
     private void ShowInitialFloatingWindow()
     {
-        if (_isExiting || !_mainViewModel.IsOverlayEnabled)
+        if (_isExiting || !_settings.Current.IsOverlayEnabled)
         {
             return;
         }
@@ -153,19 +154,43 @@ public sealed class AppCoordinator
         return _floatingWindow;
     }
 
-    private void OnOverlayVisibilityChanged(object? sender, bool isVisible)
+    private void OnSettingsSaved(object? sender, EventArgs e)
     {
-        _tray.SetOverlayState(isVisible);
-        if (isVisible)
+        ApplyOverlayState();
+    }
+
+    private void ApplyOverlayState()
+    {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        var isEnabled = _settings.Current.IsOverlayEnabled;
+        _tray.SetOverlayState(isEnabled);
+        if (_lastOverlayEnabled == isEnabled)
+        {
+            return;
+        }
+
+        _lastOverlayEnabled = isEnabled;
+        if (isEnabled)
         {
             _memoryTrim.CancelPendingTrim();
             var floatingWindow = EnsureFloatingWindow();
             _placementManager?.EnsureVisible();
-            floatingWindow.ShowWithoutActivation();
+            if (!floatingWindow.IsBarVisible)
+            {
+                floatingWindow.ShowWithoutActivation();
+            }
         }
         else
         {
-            _floatingWindow?.HideBar();
+            if (_floatingWindow is { IsBarVisible: true } floatingWindow)
+            {
+                floatingWindow.HideBar();
+            }
+
             _memoryTrim.ScheduleTrim();
         }
     }
@@ -193,9 +218,22 @@ public sealed class AppCoordinator
         ShowMainWindow();
     }
 
-    private void OnToggleOverlayRequested(object? sender, EventArgs e)
+    private async void OnToggleOverlayRequested(object? sender, EventArgs e)
     {
-        _mainViewModel.IsOverlayEnabled = !_mainViewModel.IsOverlayEnabled;
+        var previous = _settings.Current.IsOverlayEnabled;
+        _settings.Current.IsOverlayEnabled = !previous;
+        ApplyOverlayState();
+
+        try
+        {
+            await _settings.SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            _settings.Current.IsOverlayEnabled = previous;
+            ApplyOverlayState();
+            _logger.LogError(ex, "切換浮動視窗失敗。");
+        }
     }
 
     private async void OnExitRequested(object? sender, EventArgs e)
@@ -302,6 +340,7 @@ public sealed class AppCoordinator
             _floatingWindow.AppWindow.Closing -= OnFloatingWindowClosing;
         }
 
+        _settings.SettingsSaved -= OnSettingsSaved;
         _memoryTrim.Dispose();
         _mainWindowPlacementManager?.Dispose();
         _placementManager?.Dispose();

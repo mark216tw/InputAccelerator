@@ -14,6 +14,8 @@ public sealed class AppSettings
 
     public int FloatingAutoCollapseSeconds { get; set; } = FloatingAutoCollapsePresets.DefaultSeconds;
 
+    public bool FloatingAutoExpandEnabled { get; set; } = true;
+
     public WindowPlacement? FloatingWindowPlacement { get; set; }
 
     public WindowPlacement? MainWindowPlacement { get; set; }

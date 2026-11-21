@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-11-21 - v1.6.0
+
+### 目標
+新增「浮動視窗自動展開」設定，並把「啟用浮動視窗」與「選字後自動輸出 Enter 鍵」移到設定視窗；同時為主視窗 More 按鈕加上滑鼠移入回饋。
+
+### 變更
+- Core／`AppSettings`、`SettingsService`：新增 `FloatingAutoExpandEnabled`（預設 `true`，維持原本滑鼠移入自動展開的行為）並納入設定複製。
+- `Views/FloatingWindow.xaml.cs`：縮小狀態下只有設定開啟時才會因滑鼠移入自動 `Restore()`；新增 `IsBarVisible` 供協調器判斷目前顯示狀態。
+- `ViewModels/MainViewModel.cs`：移除浮動視窗開關、自動輸出 Enter 屬性與即時儲存邏輯。
+- `ViewModels/SettingsViewModel.cs`：新增上述三個開關屬性、載入與未儲存變更比對；儲存失敗時一併回復。
+- `Services/AppCoordinator.cs`：改以 `SettingsService.SettingsSaved` 套用浮動視窗顯示狀態，系統匣切換改為更新設定後儲存；以 `_lastOverlayEnabled` 避免不相關的設定儲存重複顯示或隱藏浮動視窗。
+- `MainWindow.xaml`：移除兩個開關卡片並重排列定義；More 按鈕改用新的滑鼠移入樣式。
+- `Views/SettingsWindow.xaml`、`Resources.resw`：依指定順序重排設定項目，新增「浮動視窗自動展開」與下方說明。
+- `Styles/AppStyles.xaml`：新增 `MainToolbarIconButtonStyle`，提供 PointerOver／Pressed 背景與透明度回饋。
+- 版本提升至 1.6.0，同步更新 CHANGELOG、RELEASE_NOTES、README、使用指南與建置發佈指南的版本範例。
+
+### 問題與解法
+- 兩個開關原本在主視窗是即時儲存，移到設定視窗後需與其他設定一致改為按下「儲存」才生效 → 由 `SettingsViewModel` 統一寫入並在 `SettingsSaved` 後套用浮動視窗顯示狀態。
+- 若每次設定儲存都重新顯示浮動視窗，使用者手動隱藏後可能被無關設定喚回 → 在 `AppCoordinator` 記錄上次套用的開關狀態，只在狀態真的改變時顯示或隱藏。
+
+### 待辦
+- 需在實機確認自動展開開關、系統匣切換與設定儲存後的浮動視窗顯示狀態。
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+---
+
 ## 2026-11-21 - v1.5.5
 
 ### 目標
