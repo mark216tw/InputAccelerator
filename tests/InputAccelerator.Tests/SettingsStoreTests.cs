@@ -30,6 +30,8 @@ public sealed class SettingsStoreTests : IDisposable
             FloatingBackgroundIndex = 5,
             FloatingAutoCollapseSeconds = 120,
             FloatingWindowPlacement = new WindowPlacement { X = 100, Y = 200, Width = 240, Height = 360 },
+            MainWindowPlacement = new WindowPlacement { X = 60, Y = 80, Width = 900, Height = 700 },
+            MainWindowMaximized = true,
         };
 
         await store.SaveAsync(settings);
@@ -44,7 +46,33 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.NotNull(loaded.FloatingWindowPlacement);
         Assert.Equal(100, loaded.FloatingWindowPlacement!.X);
         Assert.Equal(360, loaded.FloatingWindowPlacement.Height);
+        Assert.NotNull(loaded.MainWindowPlacement);
+        Assert.Equal(60, loaded.MainWindowPlacement!.X);
+        Assert.Equal(900, loaded.MainWindowPlacement.Width);
+        Assert.True(loaded.MainWindowMaximized);
         Assert.Contains("\"clipboardPaste\"", await File.ReadAllTextAsync(path), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Load_WhenMainWindowPlacementSizeInvalid_RemovesPlacement()
+    {
+        var path = Path.Combine(_directory, "settings.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "isOverlayEnabled": true,
+              "inputMode": "simulatedInput",
+              "mainWindowPlacement": { "x": 0, "y": 0, "width": 0, "height": 0 },
+              "mainWindowMaximized": true
+            }
+            """);
+        var store = new SettingsStore(path);
+
+        var loaded = await store.LoadAsync();
+
+        Assert.Null(loaded.MainWindowPlacement);
+        Assert.False(loaded.MainWindowMaximized);
     }
 
     [Fact]

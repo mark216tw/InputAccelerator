@@ -35,6 +35,23 @@
         <StackPanel x:Name="HotkeyPanel" Spacing="6" Visibility="Collapsed">
             <TextBlock x:Uid="HotkeyFieldLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
             <views:HotkeyRecorder x:Name="Recorder" />
+            <TextBox
+                x:Name="HotkeyTextBox"
+                x:Uid="EntryHotkeyTextBox"
+                MaxLength="120"
+                TextChanged="OnHotkeyTextChanged" />
+            <ComboBox
+                x:Name="HotkeyPresetSelector"
+                x:Uid="HotkeyPresetCombo"
+                HorizontalAlignment="Stretch"
+                SelectionChanged="OnHotkeyPresetSelectionChanged">
+                <ComboBoxItem x:Uid="HotkeyPresetRun" Tag="Win+R" />
+                <ComboBoxItem x:Uid="HotkeyPresetExplorer" Tag="Win+E" />
+                <ComboBoxItem x:Uid="HotkeyPresetDesktop" Tag="Win+D" />
+                <ComboBoxItem x:Uid="HotkeyPresetSettings" Tag="Win+I" />
+                <ComboBoxItem x:Uid="HotkeyPresetLock" Tag="Win+L" />
+                <ComboBoxItem x:Uid="HotkeyPresetSnipping" Tag="Win+Shift+S" />
+            </ComboBox>
             <TextBlock x:Uid="HotkeyHint" Style="{StaticResource HintTextStyle}" />
             <TextBox
                 x:Name="LabelBox"

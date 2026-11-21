@@ -56,6 +56,16 @@ public sealed class SettingsService
         }
     }
 
+    public void UpdateMainWindowPlacement(WindowPlacement placement, bool isMaximized)
+    {
+        ArgumentNullException.ThrowIfNull(placement);
+        lock (_sync)
+        {
+            Current.MainWindowPlacement = placement.Clone();
+            Current.MainWindowMaximized = isMaximized;
+        }
+    }
+
     private static AppSettings Clone(AppSettings source)
     {
         return new AppSettings
@@ -67,6 +77,8 @@ public sealed class SettingsService
             FloatingBackgroundIndex = source.FloatingBackgroundIndex,
             FloatingAutoCollapseSeconds = source.FloatingAutoCollapseSeconds,
             FloatingWindowPlacement = source.FloatingWindowPlacement?.Clone(),
+            MainWindowPlacement = source.MainWindowPlacement?.Clone(),
+            MainWindowMaximized = source.MainWindowMaximized,
         };
     }
 }

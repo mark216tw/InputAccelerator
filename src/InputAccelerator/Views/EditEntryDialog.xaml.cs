@@ -8,6 +8,8 @@ namespace InputAccelerator.Views;
 
 public sealed partial class EditEntryDialog : ContentDialog
 {
+    private bool _isSyncingHotkey;
+
     public EditEntryDialog(string title, EntryKind kind, string content, string? hotkey, string? label)
     {
         InitializeComponent();
@@ -19,6 +21,9 @@ public sealed partial class EditEntryDialog : ContentDialog
         LabelBox.Text = label ?? string.Empty;
         Recorder.SetHotkey(hotkey);
         Recorder.HotkeyChanged += OnHotkeyChanged;
+        _isSyncingHotkey = true;
+        HotkeyTextBox.Text = Recorder.Hotkey ?? string.Empty;
+        _isSyncingHotkey = false;
         Loaded += OnLoaded;
         UpdateKindVisibility();
     }
@@ -61,6 +66,21 @@ public sealed partial class EditEntryDialog : ContentDialog
         if (SelectedKind == EntryKind.Hotkey)
         {
             Recorder.CommitRecording();
+
+            var text = HotkeyTextBox.Text.Trim();
+            if (text.Length > 0)
+            {
+                if (!HotkeyParser.TryParse(text, out var sequence))
+                {
+                    args.Cancel = true;
+                    ShowValidation("ValidationHotkeyFormat", "按鍵組合格式無效，例如 Win+R 或 Ctrl+K, Ctrl+C。");
+                    HotkeyTextBox.Focus(FocusState.Programmatic);
+                    return;
+                }
+
+                Recorder.SetHotkey(HotkeyParser.Format(sequence));
+            }
+
             if (!HotkeyParser.IsValid(Recorder.Hotkey))
             {
                 args.Cancel = true;
@@ -89,6 +109,56 @@ public sealed partial class EditEntryDialog : ContentDialog
 
     private void OnHotkeyChanged(object? sender, EventArgs e)
     {
+        _isSyncingHotkey = true;
+        HotkeyTextBox.Text = Recorder.Hotkey ?? string.Empty;
+        HotkeyPresetSelector.SelectedIndex = -1;
+        _isSyncingHotkey = false;
+        ClearValidation();
+    }
+
+    private void OnHotkeyTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isSyncingHotkey)
+        {
+            return;
+        }
+
+        if (HotkeyPresetSelector.SelectedIndex >= 0)
+        {
+            _isSyncingHotkey = true;
+            HotkeyPresetSelector.SelectedIndex = -1;
+            _isSyncingHotkey = false;
+        }
+
+        var text = HotkeyTextBox.Text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            Recorder.SetHotkey(null);
+        }
+        else if (HotkeyParser.TryParse(text, out var sequence))
+        {
+            Recorder.SetHotkey(HotkeyParser.Format(sequence));
+        }
+
+        ClearValidation();
+    }
+
+    private void OnHotkeyPresetSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingHotkey)
+        {
+            return;
+        }
+
+        if (HotkeyPresetSelector.SelectedItem is not ComboBoxItem { Tag: string preset })
+        {
+            return;
+        }
+
+        _isSyncingHotkey = true;
+        HotkeyTextBox.Text = preset;
+        _isSyncingHotkey = false;
+        Recorder.SetHotkey(preset);
         ClearValidation();
     }
 

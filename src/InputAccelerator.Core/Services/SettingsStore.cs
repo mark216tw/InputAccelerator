@@ -133,6 +133,15 @@ public sealed class SettingsStore
             }
         }
 
+        if (settings.MainWindowPlacement is { } mainPlacement)
+        {
+            if (mainPlacement.Width <= 0 || mainPlacement.Height <= 0)
+            {
+                settings.MainWindowPlacement = null;
+                settings.MainWindowMaximized = false;
+            }
+        }
+
         return settings;
     }
 }

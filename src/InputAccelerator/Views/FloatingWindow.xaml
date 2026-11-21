@@ -55,7 +55,7 @@
                                 x:Name="OpenMainIcon"
                                 FontSize="10"
                                 Foreground="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
-                                Glyph="&#xE8A7;" />
+                                Glyph="&#xE713;" />
                         </Button>
 
                         <Button

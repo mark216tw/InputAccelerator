@@ -11,6 +11,7 @@ public sealed class HotkeyParserTests
     [InlineData("control+shift+c", HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x43)]
     [InlineData("Alt+F5", HotkeyModifiers.Alt, 0x74)]
     [InlineData("Win+Space", HotkeyModifiers.Windows, 0x20)]
+    [InlineData("Win+R", HotkeyModifiers.Windows, 0x52)]
     [InlineData("Ctrl+Alt+Delete", HotkeyModifiers.Control | HotkeyModifiers.Alt, 0x2E)]
     [InlineData("Escape", HotkeyModifiers.None, 0x1B)]
     public void TryParseChord_ReturnsExpectedChord(string text, HotkeyModifiers modifiers, int virtualKey)
@@ -28,6 +29,7 @@ public sealed class HotkeyParserTests
     [InlineData("return", "Enter")]
     [InlineData("del", "Delete")]
     [InlineData("windows+f1", "Win+F1")]
+    [InlineData("win+r", "Win+R")]
     [InlineData("Ctrl+NumpadPlus", "Ctrl+NumpadAdd")]
     public void Format_ReturnsCanonicalText(string text, string expected)
     {

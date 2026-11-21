@@ -53,6 +53,15 @@ public sealed class TextInputComposerTests
     }
 
     [Fact]
+    public void Compose_ConvertsEscapedTabToTabKey()
+    {
+        var units = TextInputComposer.Compose("a\\tb");
+
+        Assert.Equal(3, units.Count);
+        Assert.Equal(new TextInputUnit(TextInputUnitKind.VirtualKey, TextInputComposer.VirtualKeyTab), units[1]);
+    }
+
+    [Fact]
     public void Compose_PreservesSurrogatePairAsTwoUnits()
     {
         const string text = "😀";

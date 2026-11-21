@@ -22,6 +22,7 @@ public sealed class AppCoordinator
     private readonly MemoryTrimService _memoryTrim;
     private readonly ILogger<AppCoordinator> _logger;
     private MainWindow? _mainWindow;
+    private MainWindowPlacementManager? _mainWindowPlacementManager;
     private FloatingWindow? _floatingWindow;
     private FloatingWindowPlacementManager? _placementManager;
     private InputInjectionService? _injectionService;
@@ -121,6 +122,11 @@ public sealed class AppCoordinator
             _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             _mainWindow.AppWindow.Closing += OnMainWindowClosing;
             _mainWindow.Closed += OnMainWindowClosed;
+
+            _mainWindowPlacementManager = ActivatorUtilities.CreateInstance<MainWindowPlacementManager>(
+                _serviceProvider,
+                _mainWindow);
+            _mainWindowPlacementManager.Attach();
         }
 
         _mainWindow.ShowManager();
@@ -218,6 +224,7 @@ public sealed class AppCoordinator
         }
 
         args.Cancel = true;
+        _ = _mainWindowPlacementManager?.FlushAsync();
         _mainWindow?.HideToTray();
         _memoryTrim.ScheduleTrim();
     }
@@ -230,6 +237,8 @@ public sealed class AppCoordinator
             mainWindow.Closed -= OnMainWindowClosed;
             if (ReferenceEquals(_mainWindow, mainWindow))
             {
+                _mainWindowPlacementManager?.Dispose();
+                _mainWindowPlacementManager = null;
                 _mainWindow = null;
             }
         }
@@ -263,6 +272,11 @@ public sealed class AppCoordinator
 
         try
         {
+            if (_mainWindowPlacementManager is not null)
+            {
+                await _mainWindowPlacementManager.FlushAsync();
+            }
+
             if (_placementManager is not null)
             {
                 await _placementManager.FlushAsync();
@@ -289,6 +303,7 @@ public sealed class AppCoordinator
         }
 
         _memoryTrim.Dispose();
+        _mainWindowPlacementManager?.Dispose();
         _placementManager?.Dispose();
         _tray.Dispose();
         _singleInstance.Dispose();

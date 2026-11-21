@@ -11,6 +11,7 @@ public static class TextEscape
 
         return text.Contains('\\')
             ? text.Replace("\\n", "\n", StringComparison.Ordinal)
+                .Replace("\\t", "\t", StringComparison.Ordinal)
             : text;
     }
 }

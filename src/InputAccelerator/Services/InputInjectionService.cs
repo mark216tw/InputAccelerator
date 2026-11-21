@@ -78,10 +78,19 @@ public sealed class InputInjectionService
 
         try
         {
-            var target = await FocusTargetAsync("Hotkey", cancellationToken).ConfigureAwait(true);
-            if (target == IntPtr.Zero)
+            var isSystemWide = HotkeyTargetPolicy.IsSystemWide(sequence);
+            var target = IntPtr.Zero;
+            if (!isSystemWide)
             {
-                return;
+                target = await FocusTargetAsync("Hotkey", cancellationToken).ConfigureAwait(true);
+                if (target == IntPtr.Zero)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                _logger.LogDebug("以系統層級送出按鍵組合：{Hotkey}。", HotkeyParser.Format(sequence));
             }
 
             await Task.Delay(35, cancellationToken).ConfigureAwait(true);
@@ -316,7 +325,7 @@ public sealed class InputInjectionService
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (index > 0 && NativeMethods.GetForegroundWindow() != target)
+                if (target != IntPtr.Zero && index > 0 && NativeMethods.GetForegroundWindow() != target)
                 {
                     return false;
                 }

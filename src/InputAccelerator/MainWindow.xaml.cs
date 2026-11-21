@@ -18,10 +18,10 @@ namespace InputAccelerator;
 
 public sealed partial class MainWindow : Window
 {
-    private const int DefaultWidthDip = 820;
-    private const int DefaultHeightDip = 740;
-    private const int MinimumWidthDip = 600;
-    private const int MinimumHeightDip = 540;
+    public const int DefaultWidthDip = 820;
+    public const int DefaultHeightDip = 740;
+    public const int MinimumWidthDip = 600;
+    public const int MinimumHeightDip = 540;
 
     private readonly ILogger<MainWindow> _logger;
     private readonly AppearanceService _appearance;
@@ -54,7 +54,6 @@ public sealed partial class MainWindow : Window
         }
 
         RootGrid.RequestedTheme = _appearance.CurrentElementTheme;
-        ConfigureWindowGeometry();
         _minimumSizeInterop.Setup(WinRT.Interop.WindowNative.GetWindowHandle(this));
         _appearance.Changed += OnAppearanceChanged;
         Closed += OnClosed;
@@ -91,12 +90,21 @@ public sealed partial class MainWindow : Window
         Bindings.StopTracking();
     }
 
+    public void ApplyPlacement(WindowPlacement placement)
+    {
+        ArgumentNullException.ThrowIfNull(placement);
+        AppWindow.MoveAndResize(new RectInt32(placement.X, placement.Y, placement.Width, placement.Height));
+    }
+
     public void ShowManager()
     {
+        var presenter = AppWindow.Presenter as OverlappedPresenter;
+        var wasMaximized = presenter?.State == OverlappedPresenterState.Maximized;
+
         AppWindow.Show();
 
         var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        NativeMethods.ShowWindow(windowHandle, NativeMethods.SwRestore);
+        NativeMethods.ShowWindow(windowHandle, wasMaximized ? NativeMethods.SwShow : NativeMethods.SwRestore);
         NativeMethods.SetWindowPos(
             windowHandle,
             IntPtr.Zero,
@@ -105,6 +113,11 @@ public sealed partial class MainWindow : Window
             0,
             0,
             NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpShowWindow);
+        if (wasMaximized)
+        {
+            presenter?.Maximize();
+        }
+
         ForceForeground(windowHandle);
         Activate();
     }
@@ -146,22 +159,6 @@ public sealed partial class MainWindow : Window
             _settingsWindow = null;
             settingsWindow.ForceClose();
         }
-    }
-
-    private void ConfigureWindowGeometry()
-    {
-        var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        var dpi = NativeMethods.GetDpiForWindow(windowHandle);
-        var scale = dpi == 0 ? 1.0 : dpi / 96.0;
-        var width = (int)Math.Round(DefaultWidthDip * scale);
-        var height = (int)Math.Round(DefaultHeightDip * scale);
-
-        var display = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
-        var workArea = display.WorkArea;
-        var x = workArea.X + Math.Max(0, (workArea.Width - width) / 2);
-        var y = workArea.Y + Math.Max(0, (workArea.Height - height) / 2);
-
-        AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
     }
 
     private void OnMoreClick(object sender, RoutedEventArgs e)

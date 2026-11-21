@@ -43,6 +43,19 @@ public sealed class HotkeyInputComposerTests
     }
 
     [Fact]
+    public void Compose_WinR_PressesWindowsModifierThenR()
+    {
+        var units = HotkeyInputComposer.Compose(new HotkeyChord(HotkeyModifiers.Windows, 0x52));
+
+        Assert.Collection(
+            units,
+            unit => AssertUnit(unit, 0x5B, isKeyUp: false, isExtended: true),
+            unit => AssertUnit(unit, 0x52, isKeyUp: false, isExtended: false),
+            unit => AssertUnit(unit, 0x52, isKeyUp: true, isExtended: false),
+            unit => AssertUnit(unit, 0x5B, isKeyUp: true, isExtended: true));
+    }
+
+    [Fact]
     public void Compose_ExtendedKey_MarksKeyAndModifierUnits()
     {
         var units = HotkeyInputComposer.Compose(new HotkeyChord(HotkeyModifiers.Control, 0x2E));

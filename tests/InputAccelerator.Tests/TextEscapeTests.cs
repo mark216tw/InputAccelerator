@@ -18,15 +18,27 @@ public sealed class TextEscapeTests
     }
 
     [Fact]
-    public void Unescape_PreservesBackslashWithoutFollowingN()
+    public void Unescape_ConvertsEscapedTabToTab()
     {
-        Assert.Equal("C:\\temp\\file", TextEscape.Unescape("C:\\temp\\file"));
+        Assert.Equal("姓名\t電話", TextEscape.Unescape("姓名\\t電話"));
+    }
+
+    [Fact]
+    public void Unescape_ConvertsMixedNewlineAndTab()
+    {
+        Assert.Equal("a\nb\tc", TextEscape.Unescape("a\\nb\\tc"));
+    }
+
+    [Fact]
+    public void Unescape_PreservesBackslashWithoutEscapeSequence()
+    {
+        Assert.Equal("C:\\folder\\file", TextEscape.Unescape("C:\\folder\\file"));
     }
 
     [Fact]
     public void Unescape_ConvertsSequenceAnywhereInText()
     {
-        Assert.Equal("C:\\temp\name", TextEscape.Unescape("C:\\temp\\name"));
+        Assert.Equal("C:\\folder\name", TextEscape.Unescape("C:\\folder\\name"));
     }
 
     [Fact]

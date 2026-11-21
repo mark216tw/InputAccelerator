@@ -151,9 +151,11 @@ InputAccelerator.slnx
 | `EntryRepository` | 非同步載入／儲存項目清單，支援指定路徑匯入／匯出，使用暫存檔原子替換，損壞檔備份 |
 | `EntryListMerger` | 合併現有與匯入項目，保留順序並重新配發重複的 GUID |
 | `SettingsStore` | 非同步載入／儲存設定，列舉與背景索引正規化 |
+| `TextEscape` | 將文字中的 `\n`、`\t` 轉為換行與 Tab |
 | `TextInputComposer` | 將文字拆解為 Unicode 字元與 Enter／Tab 虛擬鍵單元 |
 | `HotkeyParser` | 解析、正規化與格式化 `Ctrl+C`、`Alt+H, W` 等按鍵序列，維護支援的按鍵對照表 |
 | `HotkeyInputComposer` | 將按鍵序列轉為批次送出單元，處理修飾鍵保持、釋放、Extended Key 與步驟停頓 |
+| `HotkeyTargetPolicy` | 判斷按鍵序列是否含 Win 系統快捷鍵，決定是否需要外部目標視窗 |
 | `TextPreview` | 產生清單與對話框使用的單行預覽文字 |
 | `WindowPlacementValidator` | 依螢幕工作區、DPI 與最小尺寸驗證視窗位置 |
 
@@ -175,6 +177,9 @@ InputAccelerator.slnx
                  剪貼簿：寫入 Clipboard 並 Flush()
                          等待 120ms 後送出 Ctrl+V
         按鍵組合：HotkeyParser.TryParse()
+                  HotkeyTargetPolicy.IsSystemWide()
+                    ├─ 含 Win：不解析目標視窗，直接以系統層級送出
+                    └─ 其他：還原目標焦點後送出
                   HotkeyInputComposer.ComposeSequence()
                   逐批 SendInput 送出各步驟；相鄰步驟共用修飾鍵時保持按住
                   步驟之間停頓 150ms；失敗或取消時釋放修飾鍵
@@ -366,8 +371,9 @@ FloatingWindow.OnEntryClick
 - `SettingsStoreTests`：設定載入、列舉正規化、無效背景索引。
 - `HotkeyParserTests`：解析、正規化、特殊鍵、無效組合、多步驟序列與步數上限。
 - `HotkeyInputComposerTests`：修飾鍵順序、反向放開、Extended Key、序列批次與跨步驟修飾鍵保持。
-- `TextInputComposerTests`：CRLF／LF、`\n` 逸出、Tab、Unicode 拆分。
-- `TextEscapeTests`：`\n` 轉換與無效逸出保留。
+- `HotkeyTargetPolicyTests`：Win 系統快捷鍵與一般組合鍵的目標視窗判定。
+- `TextInputComposerTests`：CRLF／LF、`\n`／`\t` 逸出、Tab、Unicode 拆分。
+- `TextEscapeTests`：`\n`、`\t` 轉換與無效逸出保留。
 - `TextPreviewTests`：預覽長度與換行處理。
 - `WindowPlacementValidatorTests`：多螢幕、越界、尺寸限制、預設位置。
 - `FloatingBackgroundPresetsTests`：索引範圍與色彩資料。

@@ -4,6 +4,55 @@
 
 ---
 
+## 2026-11-21 - v1.5.5
+
+### 目標
+記住主視窗的大小、位置與最大化狀態，並將浮動視窗左上角圖示改為齒輪。
+
+### 變更
+- Core：`AppSettings` 新增 `MainWindowPlacement` 與 `MainWindowMaximized`；`SettingsStore` 載入時清除無效尺寸；`SettingsService` 新增 `UpdateMainWindowPlacement` 並同步複製新欄位。
+- `Interop/DisplayAreaEnumerator.cs`：抽出螢幕與工作區列舉邏輯，`FloatingWindowPlacementManager` 改為共用。
+- `Services/MainWindowPlacementManager.cs`：新增主視窗位置管理器，以 500 ms debounce 儲存、以 `WindowPlacementValidator` 驗證還原，並處理最大化狀態（最大化時保留一般尺寸）。
+- `MainWindow.xaml.cs`：移除固定置中尺寸邏輯，新增 `ApplyPlacement`；`ShowManager` 保留最大化狀態，不再因 `SW_RESTORE` 取消最大化。
+- `Services/AppCoordinator.cs`：建立主視窗時附加位置管理器，隱藏到系統匣與結束前儲存，關閉時釋放。
+- `Views/FloatingWindow.xaml`：左上角圖示由 `E8A7` 改為 `E713`（齒輪），行為仍為開啟主視窗。
+- 版本提升至 1.5.5，同步更新 CHANGELOG、RELEASE_NOTES。
+- 發佈 1.5.5：RELEASE_NOTES 補上 1.5.3 至 1.5.5 的累積更新，建置與發佈指南的版本範例同步為 1.5.5，並建立 GitHub Release v1.5.5（x64／arm64 zip）。
+
+### 問題與解法
+- `ShowManager` 原本一律呼叫 `SW_RESTORE`，會讓從系統匣叫回的主視窗取消最大化 → 依 presenter 狀態改用 `SW_SHOW` 並在顯示後重新最大化。
+- 最大化狀態下 `AppWindow.Size` 為螢幕大小，直接儲存會覆寫一般尺寸 → 只在 `Restored` 狀態更新一般位置，最大化時僅記錄旗標。
+
+### 待辦
+- 尚未在跨 DPI 多螢幕實機驗證主視窗還原位置的精確度。
+- 尚未在 Windows 10 1809 與 arm64 實機驗證。
+
+---
+
+## 2026-11-21 - v1.5.4
+
+### 目標
+讓 `Win+R` 等 Windows 系統快捷鍵能可靠建立與送出，並讓文字內容支援 `\t` 代表 Tab 鍵。
+
+### 變更
+- Core：新增 `HotkeyTargetPolicy.IsSystemWide`，按鍵序列任一步含 `Win` 時視為系統快捷鍵。
+- `Services/InputInjectionService.cs`：Win 系統快捷鍵不要求外部目標視窗、不還原焦點，直接以系統層級送出；非 Win 組合鍵維持原本流程。
+- `Views/EditEntryDialog.xaml(.cs)`：按鍵組合新增手動輸入欄位與常用 Windows 快捷鍵選單（`Win+R`、`Win+E`、`Win+D`、`Win+I`、`Win+L`、`Win+Shift+S`），與錄製器雙向同步；儲存時驗證手動輸入格式。
+- Core：`TextEscape.Unescape` 新增 `\t` 轉 Tab；`TextInputComposer` 既有 Tab 虛擬鍵流程可直接套用。
+- 資源字串、README、使用指南、系統設計、架構文件、建置與發佈指南、CHANGELOG、RELEASE_NOTES 與版本資訊同步更新至 1.5.4。
+- 測試：新增 `HotkeyTargetPolicyTests`、`Win+R` 解析與送出序列測試、`\t` 轉換測試。
+
+### 問題與解法
+- Win 組合鍵屬系統全域快捷鍵，原本一律要求先找到外部目標視窗，沒有目標或焦點還原失敗時就不會送出 → 依 `HotkeyTargetPolicy` 分流，Win 序列跳過目標視窗與前景檢查。
+- 錄製 Win 組合鍵時 Windows 會先攔截按鍵（可能開啟開始功能表或「執行」）→ 不引入低階鍵盤掛鉤，改提供直接輸入與常用快捷鍵選單。
+- 新增 `\t` 後與 Windows 路徑中的 `\t` 無法區分（例如 `C:\temp`）→ 沿用既有 `\n` 的簡化規則，於文件標示已知限制。
+
+### 待辦
+- 尚未在 Windows 10 1809 與 arm64 實機驗證 `Win+R` 與常用快捷鍵選單。
+- 尚未實測焦點位於系統管理員權限程式時送出 Win 組合鍵的行為。
+
+---
+
 ## 2026-11-20 - v1.5.3
 
 ### 目標

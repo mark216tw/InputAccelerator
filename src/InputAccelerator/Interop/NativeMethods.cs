@@ -34,6 +34,8 @@ internal static class NativeMethods
 
     public const int SwShowNoActivate = 4;
 
+    public const int SwShow = 5;
+
     public const int SwRestore = 9;
 
     public const uint SwpNoSize = 0x0001;
